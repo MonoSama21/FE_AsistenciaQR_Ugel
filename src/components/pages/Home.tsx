@@ -18,6 +18,7 @@ interface RegistroCita {
     fotos: { id: number; url: string }[];
 }
 
+
 interface Cita {
     id: number;
     titulo: string;
