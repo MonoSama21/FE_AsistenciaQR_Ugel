@@ -56,7 +56,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     >
       <div className="flex-1 flex items-center justify-center bg-transparent md:py-0 py-8">
         <img
-          src="../src/assets/img/foto.png"
+          src="https://res.cloudinary.com/dzhz9nzqu/image/upload/v1772143055/foto_opawdr.png"
           alt="Animación pareja"
           className="max-w-[60%] md:max-w-[80%] h-auto animate-float mx-auto"
         />
