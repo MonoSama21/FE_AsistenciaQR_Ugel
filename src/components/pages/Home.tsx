@@ -61,28 +61,16 @@ const Home = () => {
     // Cargar todos los registros de todas las páginas
     const obtenerRegistros = async () => {
         try {
-            let page = 1;
-            const limit = 50; // Puedes ajustar el límite si tu backend lo permite
-            let allRegistros = [];
-            let totalPages = 1;
-            do {
-                const response = await axios.get(
-                    URL_API + `/registros-citas?page=${page}&limit=${limit}`,
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": "Bearer " + localStorage.getItem('authToken')
-                        }
+            const response = await axios.get(
+                URL_API + `/registros-citas`,
+                {
+                    headers: {
+                        "Authorization": "Bearer " + localStorage.getItem('authToken')
                     }
-                );
-                const data = response.data;
-                if (data && data.registros) {
-                    allRegistros = allRegistros.concat(data.registros);
                 }
-                totalPages = data.totalPages || 1;
-                page++;
-            } while (page <= totalPages);
-            setRegistros(allRegistros);
+            );
+            const data = response.data;
+            setRegistros(data.registros || []);
         } catch (error) {
             setRegistros([]);
         }
@@ -189,11 +177,21 @@ const Home = () => {
         setErrorRegistro("");
         try {
             const formData = new FormData();
-            formData.append('citaId', String(modalCita.id));
+            console.log('Registrando citaid:', modalCita.id, 'Título:', modalCita.titulo);
+            formData.append('citaid', String(modalCita.id));
             formData.append('comentario', comentario);
-            fotos.forEach(foto => {
-                if (foto) formData.append('fotos', foto);
+            fotos.forEach((foto, idx) => {
+                if (foto) {
+                    formData.append('fotos', foto);
+                    console.log('Foto', idx, foto);
+                } else {
+                    console.log('Foto', idx, 'no presente');
+                }
             });
+            // Mostrar el contenido del FormData
+            for (let pair of formData.entries()) {
+                console.log(pair[0]+ ':', pair[1]);
+            }
             await axios.post(
                 URL_API + "/registros-citas",
                 formData,
@@ -279,7 +277,7 @@ const Home = () => {
 
                             <div className="mb-8 w-full flex justify-center">
                                 {citasPagina[0].comentario ? (
-                                    <div className="bg-pink-200 text-pink-700 px-4 py-2 rounded-xl text-justify text-left max-w-xs w-full" style={{ whiteSpace: 'pre-line', textAlign: 'justify' }}>{citasPagina[0].comentario}</div>
+                                    <div className="bg-pink-200 text-pink-700 px-4 py-2 rounded-xl max-w-xs w-full" style={{ whiteSpace: 'pre-line', textAlign: 'justify' }}>{citasPagina[0].comentario}</div>
                                 ) : (
                                     <div className="bg-black text-white px-4 py-2 rounded-xl text-center max-w-xs w-full">Sin comentario</div>
                                 )}
@@ -353,7 +351,7 @@ const Home = () => {
  
                             <div className="mb-8 w-full flex justify-center">
                                 {citasPagina[1].comentario ? (
-                                    <div className="bg-pink-200 text-pink-700 px-4 py-2 rounded-xl text-justify text-left max-w-xs w-full" style={{ whiteSpace: 'pre-line', textAlign: 'justify' }}>{citasPagina[1].comentario}</div>
+                                    <div className="bg-pink-200 text-pink-700 px-4 py-2 rounded-xl max-w-xs w-full" style={{ whiteSpace: 'pre-line', textAlign: 'justify' }}>{citasPagina[1].comentario}</div>
                                 ) : (
                                     <div className="bg-black text-white px-4 py-2 rounded-xl text-center max-w-xs w-full">Sin comentario</div>
                                 )}
