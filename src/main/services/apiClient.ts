@@ -23,6 +23,7 @@ apiClient.interceptors.request.use(
   }
 );
 
+
 // INTERCEPTOR DE RESPONSE: Maneja errores 401
 apiClient.interceptors.response.use(
   (response) => response,
