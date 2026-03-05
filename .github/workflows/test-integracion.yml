@@ -78,7 +78,7 @@ jobs:
         server_port: ${{ secrets.MAIL_PORT }}
         username: ${{ secrets.MAIL_USERNAME }}
         password: ${{ secrets.MAIL_PASSWORD }}
-        subject: "🔵 Pruebas iniciadas - FrontEnd Integración"
+        subject: "🔵 Pruebas FrontEnd iniciadas - SIAQR UGEL CHINCHA"
         to: ${{ steps.params.outputs.correo }}
         from: ${{ secrets.MAIL_USERNAME }}
         html_body: |
@@ -98,7 +98,7 @@ jobs:
                       <td style="background: linear-gradient(135deg, #476ed8 0%, #4990e0 100%); padding: 30px 40px; text-align: center;">
                         <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772743039/logo_tyjt1t.png" width="300" style="margin-bottom: 15px;">
 
-                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">🚀 Pruebas Automatizadas iniciadas para el Sistema SIAQR UGEL CHINCHA </h1>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">🚀 Pruebas Automatizadas iniciadas para SIAQR UGEL CHINCHA </h1>
                         <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 14px;">Sistema de Testing Continuo - DEVQORA</p>
                       </td>
                     </tr>
@@ -162,7 +162,7 @@ jobs:
           </body>
           </html>
 
-          
+
     - name: Install dependencies
       working-directory: src/test
       run: npm ci
@@ -456,7 +456,7 @@ jobs:
         server_port: ${{ secrets.MAIL_PORT }}
         username: ${{ secrets.MAIL_USERNAME }}
         password: ${{ secrets.MAIL_PASSWORD }}
-        subject: "🟢 Pruebas finalizadas - FrontEnd Integración"
+        subject: "🟢 Pruebas FrontEnd finalizadas - SIAQR UGEL CHINCHA"
         to: ${{ steps.params.outputs.correo }}
         from: ${{ secrets.MAIL_USERNAME }}
         html_body: |
@@ -473,12 +473,12 @@ jobs:
                   <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
                     <!-- Header -->
                     <tr>
-                      <td style="background: ${{ steps.run_tests.outputs.resultado == '0' && 'linear-gradient(135deg, #10b981 0%, #059669 100%)' || 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}; padding: 30px 40px; text-align: center;">
-                        <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1764399269/Blue_Minimalist_Technology_Cube_Logo_1_x445ab.png" width="120" style="margin-bottom: 15px;">
+                      <td style="background: linear-gradient(135deg, #18d337 0%, #2ca851 100%); padding: 30px 40px; text-align: center;">
+                        <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772743039/logo_tyjt1t.png" width="300" style="margin-bottom: 15px;">
                         <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
                           ${{ steps.run_tests.outputs.resultado == '0' && '✅ Pruebas Exitosas' || '❌ Pruebas con Fallos' }}
                         </h1>
-                        <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 14px;">Reporte de Ejecución - SIASIS Testing</p>
+                        <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 14px;">Reporte de Ejecución de pruebas automatizadas de SIAQR UGEL CHINCHA</p>
                       </td>
                     </tr>
                     <!-- Status Badge -->
@@ -553,6 +553,7 @@ jobs:
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
                             <td>
+                              <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1764399269/Blue_Minimalist_Technology_Cube_Logo_1_x445ab.png" width="120" style="margin-bottom: 15px;">
                               <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.6;">
                                 <strong style="color: #1e293b;">QA Automation SSr Yrvin Pachas</strong><br>
                                 Testing Continuo - ZeusTesting<br>
