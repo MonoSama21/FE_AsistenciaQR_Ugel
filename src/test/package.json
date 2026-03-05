@@ -1,0 +1,30 @@
+{
+  "name": "testing-continuosiasis",
+  "version": "1.0.0",
+  "description": "Proyecto personal de testing continuo con CI/CD enfocada en la detección temprana de errores de FrontEnd\r # Creado por: QA Automation SSr Yrvin Pachas",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx bddgen && npx playwright test",
+    "test:ui": "npx bddgen && npx playwright test --ui",
+    "test:headed": "npx bddgen && npx playwright test --headed",
+    "test:debug": "npx bddgen && npx playwright test --debug",
+    "report": "npx playwright show-report target/playwright-report",
+    "bddgen": "npx bddgen"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.2.0",
+    "@faker-js/faker": "^9.9.0",
+    "@playwright/test": "^1.57.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/node": "^24.10.1",
+    "cucumber-html-reporter": "^7.2.0",
+    "playwright-bdd": "^8.4.2",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
+}

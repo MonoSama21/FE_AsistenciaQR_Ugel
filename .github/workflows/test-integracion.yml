@@ -1,0 +1,570 @@
+name: FrontEnd Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Ingrese el nombre del tag del escenario
+        required: true
+        type: string
+        default: "@test"
+      correo:
+        description: Ingrese el correo donde llegará la notificación
+        required: true
+        type: string
+        default: "2101010261@undc.edu.pe"
+      ambiente:
+        description: Ambiente de ejecución
+        required: true
+        type: choice
+        options:
+          - certificacion
+          - integracion
+        default: "certificacion"
+        
+  schedule:
+    # Lunes a Viernes 8 AM — Tag diario
+    - cron: "0 13 * * 1-5"   # 13 UTC = 8AM Perú
+    # Sábado y Domingo 7 PM — Tag de fin de semana
+    - cron: "0 6 * * 6,0"    # 00 UTC = 1:00AM Perú
+
+jobs:
+  Pruebas-FrontEnd-Integracion:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 👈 Permiso para hacer push a gh-pages
+      pages: write     # 👈 Permiso para desplegar en GitHub Pages
+      id-token: write  # 👈 Permiso para autenticación
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+
+    # =========================================================
+    # 📌 ASIGNAR TAG Y CORREO SEGÚN EL TIPO DE DISPARO
+    # =========================================================
+    - name: Detectar parámetros para ejecución automática o manual
+      id: params
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          echo "correo=${{ github.event.inputs.correo }}" >> $GITHUB_OUTPUT
+          echo "ambiente=${{ github.event.inputs.ambiente }}" >> $GITHUB_OUTPUT
+        else
+          # Lunes a Viernes
+          if [[ $(date +%u) -lt 6 ]]; then
+            echo "tag=@DailyTest" >> $GITHUB_OUTPUT
+            echo "correo=2101010261@undc.edu.pe,apachas.csm@gmail.com" >> $GITHUB_OUTPUT
+            echo "ambiente=certificacion" >> $GITHUB_OUTPUT
+          else
+            # Sábado y domingo
+            echo "tag=@WeekendTest" >> $GITHUB_OUTPUT
+            echo "correo=2101010261@undc.edu.pe,apachas.csm@gmail.com" >> $GITHUB_OUTPUT
+            echo "ambiente=certificacion" >> $GITHUB_OUTPUT
+          fi
+        fi
+
+    # =========================================================
+    # CORREO INICIAL (HTML)
+    # =========================================================
+    - name: Notificar inicio de ejecución
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ secrets.MAIL_SERVER }}
+        server_port: ${{ secrets.MAIL_PORT }}
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        subject: "🔵 Pruebas iniciadas - FrontEnd Integración"
+        to: ${{ steps.params.outputs.correo }}
+        from: ${{ secrets.MAIL_USERNAME }}
+        html_body: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f4f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 40px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">🚀 Pruebas Iniciadas</h1>
+                        <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 14px;">Sistema de Testing Continuo - SIASIS</p>
+                      </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                      <td style="padding: 40px;">
+                        <div style="background-color: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                          <p style="margin: 0; font-size: 16px; color: #334155;">⚡ Las pruebas automatizadas han comenzado su ejecución.</p>
+                        </div>
+                        
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                          <tr>
+                            <td style="padding: 15px 0; border-bottom: 1px solid #e2e8f0;">
+                              <span style="color: #64748b; font-size: 14px; font-weight: 500;">📋 Tag Ejecutado</span><br>
+                              <span style="color: #667eea; font-size: 18px; font-weight: 600; margin-top: 5px; display: inline-block;">${{ steps.params.outputs.tag }}</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 15px 0; border-bottom: 1px solid #e2e8f0;">
+                              <span style="color: #64748b; font-size: 14px; font-weight: 500;">🌍 Ambiente</span><br>
+                              <span style="color: #10b981; font-size: 18px; font-weight: 600; margin-top: 5px; display: inline-block; text-transform: uppercase;">${{ steps.params.outputs.ambiente }}</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 15px 0; border-bottom: 1px solid #e2e8f0;">
+                              <span style="color: #64748b; font-size: 14px; font-weight: 500;">⏱️ Hora de Inicio</span><br>
+                              <span style="color: #1e293b; font-size: 16px; margin-top: 5px; display: inline-block;">${{ github.event.repository.updated_at }}</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 15px 0;">
+                              <span style="color: #64748b; font-size: 14px; font-weight: 500;">🔗 Build Number</span><br>
+                              <span style="color: #1e293b; font-size: 16px; margin-top: 5px; display: inline-block;">#${{ github.run_number }}</span>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                          <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" 
+                             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                            🔍 Ver Ejecución en Tiempo Real
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #f8fafc; padding: 25px 40px; border-top: 1px solid #e2e8f0;">
+                        <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.6;">
+                          <strong style="color: #1e293b;">QA Automation SSr Yrvin Pachas</strong><br>
+                          Testing Continuo - ZeusTesting <br>
+                          🤖 Mensaje automático del sistema de CI/CD
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+
+    - name: Install dependencies
+      working-directory: src/test
+      run: npm ci
+
+    - name: Install Playwright Browsers
+      working-directory: src/test
+      run: npx playwright install --with-deps
+
+    - name: Run Playwright tests by tag
+      id: run_tests
+      working-directory: src/test
+      env:
+        TEST_ENVIRONMENT: ${{ steps.params.outputs.ambiente }}
+      run: |
+        npm test -- --grep "${{ steps.params.outputs.tag }}"
+        echo "resultado=$?" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
+    - name: List target directory
+      run: ls -R src/test/target
+
+    # Subir artefacto completo (con videos y traces) a GitHub Actions
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: src/test/target/
+        retention-days: 30
+
+    # =========================================================
+    # 🌐 DESPLEGAR REPORTE EN GITHUB PAGES
+    # =========================================================
+    - name: Preparar GitHub Pages con historial
+      if: always()
+      run: |
+        RUN_ID="${{ github.run_id }}"
+        mkdir -p gh-pages/reports/$RUN_ID
+        
+        # Copiar reporte de Playwright al subdirectorio específico de esta ejecución
+        if [ -d "src/test/target/playwright-report" ]; then
+          cp -r src/test/target/playwright-report/* gh-pages/reports/$RUN_ID/
+          echo "✅ Reporte de Playwright copiado a /reports/$RUN_ID"
+        else
+          mkdir -p gh-pages/reports/$RUN_ID
+          echo "<h1>No se generó reporte</h1>" > gh-pages/reports/$RUN_ID/index.html
+        fi
+        
+        # Copiar también a /report para mantener compatibilidad (último reporte)
+        mkdir -p gh-pages/report
+        if [ -d "src/test/target/playwright-report" ]; then
+          cp -r src/test/target/playwright-report/* gh-pages/report/
+          echo "✅ Reporte también copiado a /report (último reporte)"
+        fi
+        
+        # Copiar test-launcher.html como index.html (página principal)
+        if [ -f "src/test/test-launcher.html" ]; then
+          cp src/test/test-launcher.html gh-pages/index.html
+          echo "✅ Plataforma de testing configurada como página principal"
+        fi
+        
+        # 🔥 DESCARGAR HISTORIAL PREVIO DE GITHUB PAGES
+        HISTORY_FILE="gh-pages/history.json"
+        PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/history.json"
+        
+        echo "📥 Intentando descargar historial previo de: $PAGES_URL"
+        if curl -fsSL "$PAGES_URL" -o "$HISTORY_FILE" 2>/dev/null; then
+          echo "✅ Historial previo descargado correctamente"
+          echo "📊 Cantidad de registros anteriores: $(jq 'length' $HISTORY_FILE)"
+        else
+          echo "⚠️ No se encontró historial previo, creando uno nuevo"
+          echo "[]" > "$HISTORY_FILE"
+        fi
+        
+        # Extraer datos de esta ejecución
+        PASSED=$(jq '[.suites[]?.suites[]?.specs[]?.tests[]? | select(.results[]?.status == "passed")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+        FAILED=$(jq '[.suites[]?.suites[]?.specs[]?.tests[]? | select(.results[]?.status == "failed" or .results[]?.status == "timedOut")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+        SKIPPED=$(jq '[.suites[]?.suites[]?.specs[]?.tests[]? | select(.results[]?.status == "skipped")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+        TOTAL=$((PASSED + FAILED + SKIPPED))
+        
+        # Obtener duración total
+        DURATION=$(jq '[.suites[]?.suites[]?.specs[]?.tests[]?.results[]?.duration // 0] | add / 1000' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+        
+        # Crear objeto JSON de esta ejecución
+        EXECUTION_DATA=$(cat <<EOF
+        {
+          "id": "${{ github.run_id }}",
+          "runNumber": ${{ github.run_number }},
+          "tag": "${{ steps.params.outputs.tag }}",
+          "ambiente": "${{ steps.params.outputs.ambiente }}",
+          "date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+          "dateFormatted": "$(date +"%d/%m/%Y %H:%M")",
+          "total": $TOTAL,
+          "passed": $PASSED,
+          "failed": $FAILED,
+          "skipped": $SKIPPED,
+          "duration": $DURATION,
+          "status": "${{ steps.run_tests.outputs.resultado == '0' && 'passed' || 'failed' }}",
+          "branch": "${{ github.ref_name }}",
+          "commit": "${{ github.sha }}",
+          "commitShort": "${GITHUB_SHA:0:7}",
+          "actor": "${{ github.actor }}",
+          "reportUrl": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/${{ github.run_id }}",
+          "actionsUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        }
+        EOF
+        )
+        
+        # Agregar al historial (mantener últimas 50 ejecuciones)
+        jq --argjson new "$EXECUTION_DATA" '. = [$new] + . | .[0:50]' "$HISTORY_FILE" > "${HISTORY_FILE}.tmp"
+        mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
+        
+        echo "✅ Historial actualizado"
+        echo "� Total de registros en historial: $(jq 'length' $HISTORY_FILE)"
+        echo "📂 Estructura de GitHub Pages:"
+        ls -la gh-pages/
+        echo "📄 Contenido de history.json (primeros 3 registros):"
+        jq '.[0:3]' "$HISTORY_FILE"
+    
+    # =========================================================
+    # 📊 EXTRAER RESULTADOS DEL REPORTE JSON DE PLAYWRIGHT
+    # =========================================================
+    - name: Extraer resultados de Playwright
+      if: always()
+      id: test_results
+      run: |
+        if [ -f "src/test/target/test-results/results.json" ]; then
+          # Mostrar la sección de suites del JSON para diagnóstico
+          echo "📋 Sección 'suites' del JSON:"
+          jq '.suites' src/test/target/test-results/results.json | head -200
+          echo "================================"
+          
+          # Extraer estadísticas combinando ambos niveles de specs
+          # Nivel 2: Scenarios normales → .suites[].suites[].specs[]
+          # Nivel 3: Scenario Outline → .suites[].suites[].suites[].specs[]
+          PASSED_LEVEL2=$(jq '[.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "passed")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          PASSED_LEVEL3=$(jq '[.suites[]?.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "passed")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          PASSED=$((PASSED_LEVEL2 + PASSED_LEVEL3))
+          
+          FAILED_LEVEL2=$(jq '[.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "failed" or .tests[0]?.results[0]?.status == "timedOut")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          FAILED_LEVEL3=$(jq '[.suites[]?.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "failed" or .tests[0]?.results[0]?.status == "timedOut")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          FAILED=$((FAILED_LEVEL2 + FAILED_LEVEL3))
+          
+          SKIPPED_LEVEL2=$(jq '[.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "skipped")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          SKIPPED_LEVEL3=$(jq '[.suites[]?.suites[]?.suites[]?.specs[]? | select(.tests[0]?.results[0]?.status == "skipped")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          SKIPPED=$((SKIPPED_LEVEL2 + SKIPPED_LEVEL3))
+          
+          # Si no hay datos, intentar estructura alternativa
+          if [ "$PASSED" == "0" ] && [ "$FAILED" == "0" ] && [ "$SKIPPED" == "0" ]; then
+            PASSED=$(jq '[.. | objects | select(.status? == "passed")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+            FAILED=$(jq '[.. | objects | select(.status? == "failed" or .status? == "timedOut")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+            SKIPPED=$(jq '[.. | objects | select(.status? == "skipped")] | length' src/test/target/test-results/results.json 2>/dev/null || echo "0")
+          fi
+          
+          TOTAL=$((PASSED + FAILED + SKIPPED))
+          
+          echo "✅ PASSED: $PASSED"
+          echo "❌ FAILED: $FAILED"
+          echo "⏭️ SKIPPED: $SKIPPED"
+          echo "📝 TOTAL: $TOTAL"
+          
+          # Extraer nombres de escenarios y sus estados
+          echo "📝 Extrayendo detalles de escenarios..."
+          
+          # Crear archivos temporales
+          > /tmp/scenarios_list.txt
+          > /tmp/scenarios_html.txt
+          
+          # Extraer escenarios normales (2 niveles: archivo → Feature → specs)
+          jq -r '.suites[]?.suites[]?.specs[]? | "\(.title)|\(.tests[0]?.results[0]?.status // "unknown")"' src/test/target/test-results/results.json 2>/dev/null | while IFS='|' read -r title status; do
+            if [ -n "$title" ] && [ "$title" != "null" ] && [ "$title" != "" ]; then
+              echo "  ✓ Encontrado (Scenario): $title - $status"
+              case "$status" in
+                "passed")
+                  echo "- ✅ **PASSED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:green; font-weight: bold;'>✅ PASSED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+                "failed"|"timedOut")
+                  echo "- ❌ **FAILED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:red; font-weight: bold;'>❌ FAILED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+                "skipped")
+                  echo "- ⏭️ **SKIPPED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:gray; font-weight: bold;'>⏭️ SKIPPED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+              esac
+            fi
+          done
+          
+          # Extraer escenarios Outline (3 niveles: archivo → Feature → Scenario Outline → specs)
+          jq -r '.suites[]?.suites[]?.suites[]?.specs[]? | "\(.title)|\(.tests[0]?.results[0]?.status // "unknown")"' src/test/target/test-results/results.json 2>/dev/null | while IFS='|' read -r title status; do
+            if [ -n "$title" ] && [ "$title" != "null" ] && [ "$title" != "" ]; then
+              echo "  ✓ Encontrado (Outline): $title - $status"
+              case "$status" in
+                "passed")
+                  echo "- ✅ **PASSED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:green; font-weight: bold;'>✅ PASSED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+                "failed"|"timedOut")
+                  echo "- ❌ **FAILED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:red; font-weight: bold;'>❌ FAILED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+                "skipped")
+                  echo "- ⏭️ **SKIPPED**: $title" >> /tmp/scenarios_list.txt
+                  echo "<tr><td style='border: 1px solid #ddd; padding: 10px;'><span style='color:gray; font-weight: bold;'>⏭️ SKIPPED</span></td><td style='border: 1px solid #ddd; padding: 10px;'>$title</td></tr>" >> /tmp/scenarios_html.txt
+                  ;;
+              esac
+            fi
+          done
+          
+          # Verificar si se capturaron escenarios
+          if [ ! -s /tmp/scenarios_html.txt ]; then
+            echo "⚠️ No se pudieron extraer escenarios"
+            echo "<tr><td colspan='2' style='border: 1px solid #ddd; padding: 10px; text-align: center; color: orange;'>⚠️ No se pudieron extraer los nombres de los escenarios</td></tr>" > /tmp/scenarios_html.txt
+            echo "- ⚠️ No se pudieron extraer los nombres de los escenarios" > /tmp/scenarios_list.txt
+          else
+            echo "✅ Escenarios extraídos correctamente"
+          fi
+          
+          # Crear tabla de resumen HTML para el email
+          TABLE="<table style='border-collapse: collapse; width: 100%; margin: 20px 0;'>"
+          TABLE="$TABLE<tr style='background-color: #f2f2f2;'>"
+          TABLE="$TABLE<th style='border: 1px solid #ddd; padding: 12px;'>Total</th>"
+          TABLE="$TABLE<th style='border: 1px solid #ddd; padding: 12px; color: green;'>✅ Passed</th>"
+          TABLE="$TABLE<th style='border: 1px solid #ddd; padding: 12px; color: red;'>❌ Failed</th>"
+          TABLE="$TABLE<th style='border: 1px solid #ddd; padding: 12px; color: gray;'>⏭️ Skipped</th>"
+          TABLE="$TABLE</tr><tr>"
+          TABLE="$TABLE<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'><strong>$TOTAL</strong></td>"
+          TABLE="$TABLE<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'><strong>$PASSED</strong></td>"
+          TABLE="$TABLE<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'><strong>$FAILED</strong></td>"
+          TABLE="$TABLE<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'><strong>$SKIPPED</strong></td>"
+          TABLE="$TABLE</tr></table>"
+          
+          # Agregar tabla de escenarios ejecutados para el email
+          SCENARIOS_TABLE="<h3 style='color:#333; margin-top: 20px;'>📋 Escenarios Ejecutados:</h3>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE<table style='border-collapse: collapse; width: 100%; margin: 20px 0;'>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE<tr style='background-color: #f2f2f2;'>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE<th style='border: 1px solid #ddd; padding: 12px; width: 150px;'>Estado</th>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE<th style='border: 1px solid #ddd; padding: 12px;'>Escenario</th>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE</tr>"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE$(cat /tmp/scenarios_html.txt)"
+          SCENARIOS_TABLE="$SCENARIOS_TABLE</table>"
+          
+          # Usar delimitador EOF para valores multilinea
+          echo "table_html<<EOF" >> $GITHUB_OUTPUT
+          echo "$TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "scenarios_table<<EOF" >> $GITHUB_OUTPUT
+          echo "$SCENARIOS_TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Crear resumen para GitHub Actions
+          echo "## 📊 Resultados de las Pruebas" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Métrica | Cantidad |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Escenarios Ejecutados:" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/scenarios_list.txt >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Archivo results.json no encontrado"
+          echo "📂 Contenido de src/test/target/test-results:"
+          ls -la src/test/target/test-results/ || echo "Carpeta no existe"
+          
+          echo "table_html=<p style='color: orange;'>⚠️ No se encontró el archivo de resultados JSON</p>" >> $GITHUB_OUTPUT
+          echo "⚠️ No se pudo generar el resumen de resultados" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Deploy to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./gh-pages
+        publish_branch: gh-pages
+        keep_files: false
+        force_orphan: false
+
+    # =========================================================
+    # 📧 CORREO FINAL CON TABLA DE RESULTADOS Y LINK
+    # =========================================================
+    - name: Notificar fin de ejecución con tabla de resultados
+      if: always()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ secrets.MAIL_SERVER }}
+        server_port: ${{ secrets.MAIL_PORT }}
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        subject: "🟢 Pruebas finalizadas - FrontEnd Integración"
+        to: ${{ steps.params.outputs.correo }}
+        from: ${{ secrets.MAIL_USERNAME }}
+        html_body: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f4f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: ${{ steps.run_tests.outputs.resultado == '0' && 'linear-gradient(135deg, #10b981 0%, #059669 100%)' || 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}; padding: 30px 40px; text-align: center;">
+                        <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1764399269/Blue_Minimalist_Technology_Cube_Logo_1_x445ab.png" width="120" style="margin-bottom: 15px;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                          ${{ steps.run_tests.outputs.resultado == '0' && '✅ Pruebas Exitosas' || '❌ Pruebas con Fallos' }}
+                        </h1>
+                        <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 14px;">Reporte de Ejecución - SIASIS Testing</p>
+                      </td>
+                    </tr>
+                    <!-- Status Badge -->
+                    <tr>
+                      <td style="padding: 30px 40px 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                          <span style="background-color: ${{ steps.run_tests.outputs.resultado == '0' && '#dcfce7' || '#fee2e2' }}; color: ${{ steps.run_tests.outputs.resultado == '0' && '#166534' || '#991b1b' }}; padding: 12px 24px; border-radius: 20px; font-weight: 600; font-size: 16px; display: inline-block;">
+                            Estado: ${{ steps.run_tests.outputs.resultado == '0' && 'PASSED ✓' || 'FAILED ✗' }}
+                          </span>
+                        </div>
+                        
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 25px;">
+                          <tr>
+                            <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                              <span style="color: #64748b; font-size: 14px;">📋 Tag Ejecutado</span><br>
+                              <span style="color: #1e293b; font-size: 16px; font-weight: 600; margin-top: 5px; display: inline-block;">${{ steps.params.outputs.tag }}</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                              <span style="color: #64748b; font-size: 14px;">🌍 Ambiente</span><br>
+                              <span style="color: #10b981; font-size: 16px; font-weight: 600; margin-top: 5px; display: inline-block; text-transform: uppercase;">${{ steps.params.outputs.ambiente }}</span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <!-- Results Table -->
+                    <tr>
+                      <td style="padding: 0 40px 20px;">
+                        <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">📊 Resumen de Resultados</h3>
+                        ${{ steps.test_results.outputs.table_html }}
+                      </td>
+                    </tr>
+                    <!-- Scenarios -->
+                    <tr>
+                      <td style="padding: 0 40px 30px;">
+                        ${{ steps.test_results.outputs.scenarios_table }}
+                      </td>
+                    </tr>
+                    <!-- Action Buttons -->
+                    <tr>
+                      <td style="padding: 0 40px 30px;">
+                        <div style="background-color: #f8fafc; border-radius: 8px; padding: 25px; text-align: center;">
+                          <p style="color: #64748b; font-size: 14px; margin: 0 0 20px 0; font-weight: 500;">📄 Recursos Disponibles</p>
+                          
+                          <a href="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" 
+                             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 5px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                            🚀 Plataforma de Testing
+                          </a>
+                          
+                          <a href="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/report" 
+                             style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 5px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+                            📊 Ver Reporte HTML
+                          </a>
+                          
+                          <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" 
+                             style="background-color: #64748b; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 5px; font-weight: 600; font-size: 14px;">
+                            🔗 Ver en GitHub Actions
+                          </a>
+                          
+                          <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" 
+                             style="background-color: #8b5cf6; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 5px; font-weight: 600; font-size: 14px;">
+                            📦 Descargar Videos
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #f8fafc; padding: 25px 40px; border-top: 1px solid #e2e8f0;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td>
+                              <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.6;">
+                                <strong style="color: #1e293b;">QA Automation SSr Yrvin Pachas</strong><br>
+                                Testing Continuo - ZeusTesting<br>
+                                Build #${{ github.run_number }} • Branch: ${{ github.ref_name }}
+                              </p>
+                            </td>
+                            <td align="right">
+                              <span style="color: #94a3b8; font-size: 24px;">🤖</span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>

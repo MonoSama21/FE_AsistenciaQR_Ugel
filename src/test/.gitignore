@@ -1,0 +1,16 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/target/
+
+# Playwright-BDD generados
+.features-gen/
+
+# Python
+.venv/
+__pycache__/
