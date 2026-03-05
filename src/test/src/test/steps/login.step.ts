@@ -26,7 +26,7 @@ Given('el usuario se encuentra en el login de SauceDemo', async ({ page }) => {
 
 When('ingresa un nombre de usuario válido y contraseña válida', async ({ page }) => {
    const loginPage = new LoginPage(page);
-   await loginPage.fillUsername('standard_user');
+   await loginPage.fillEmail('standard_user');
    await loginPage.fillPassword('secret_sauce');
 });
 
@@ -40,7 +40,7 @@ Given('el usuario ha ingresado sesión con éxito en SauceDemo', async ({ page }
     console.log(`🌍 Ejecutando en ambiente: ${process.env.TEST_ENVIRONMENT || 'certificacion'}`);
     await page.goto(`${baseUrl}`);
     const loginPage = new LoginPage(page);
-    await loginPage.fillUsername('standard_user');
+    await loginPage.fillEmail('standard_user');
     await loginPage.fillPassword('secret_sauce');
     await loginPage.clickLoginButton();
 });
@@ -53,19 +53,19 @@ Then('debe ser redirigido a la página de productos', async ({ page }) => {
 
 When('ingresa un nombre de usuario válido y contraseña incorrecta', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.fillUsername('standard_user');
+    await loginPage.fillEmail('standard_user');
     await loginPage.fillPassword('incorrect_password');
 });
 
 When('ingresa un nombre de usuario bloqueado y contraseña válida', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.fillUsername('locked_out_user');
+    await loginPage.fillEmail('locked_out_user');
     await loginPage.fillPassword('secret_sauce');
 });
 
 When('ingresa un nombre de usuario inválido y contraseña incorrecta', async ({ page}) => {
   const loginPage = new LoginPage(page);
-  await loginPage.fillUsername('invalid_user');
+  await loginPage.fillEmail('invalid_user');
   await loginPage.fillPassword('incorrect_password');
 });
 
@@ -81,5 +81,5 @@ When('deja vacío el campo de usuario e ingresa una contraseña válida', async 
 
 When('ingresa un nombre de usuario válido y deja vacío el campo de contraseña', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  await loginPage.fillUsername('standard_user');
+  await loginPage.fillEmail('standard_user');
 });

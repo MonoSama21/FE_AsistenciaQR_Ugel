@@ -143,6 +143,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               type="submit"
               disabled={loading}
               className="w-full py-3.5 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-800/30 hover:shadow-xl hover:shadow-blue-800/40 text-sm tracking-wide mt-2"
+              id='btn-login'
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -156,7 +157,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </button>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center" id="error-message">
                 {error}
               </div>
             )}

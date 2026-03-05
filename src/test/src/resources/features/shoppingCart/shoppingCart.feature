@@ -1,4 +1,4 @@
-@test @shoppingCart @cart @HU-002 @DailyTest
+@test @shoppingCart @cart @HU-002
 Feature: Carrito de compras en la tienda en línea
 
     Como usuario de la tienda en línea SauceDemo

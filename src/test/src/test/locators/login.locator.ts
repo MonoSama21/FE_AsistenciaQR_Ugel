@@ -16,8 +16,8 @@ export class LoginLocator {
         return this.page.getByText('Profesor (Primaria)');
     }
 
-    get usernameTextBox(){
-        return this.page.locator('#user-name');
+    get emailTextBox(){
+        return this.page.locator('#email');
     }
 
     get passwordTextBox(){
@@ -25,15 +25,15 @@ export class LoginLocator {
     }
 
     get loginButton(){
-        return this.page.locator('#login-button');
+        return this.page.locator('#btn-login');
     }
 
-    get headerProducts(){
-        return this.page.locator("#header_container");
+    get headerDashboard(){
+        return this.page.locator("#header-dashboard");
     }
 
-    get incorrectCredentialsAlert(){
-        return this.page.locator("//div[@class='error-message-container error']");
+    get errorMessage(){
+        return this.page.locator("#error-message");
     }
 
 
