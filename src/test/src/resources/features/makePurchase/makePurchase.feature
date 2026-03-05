@@ -1,4 +1,4 @@
-@test @purchase @checkout @HU-003 @DailyTest
+@test @purchase @checkout @HU-003
 Feature: Proceso de compra en la tienda en línea
 
     Como usuario autenticado

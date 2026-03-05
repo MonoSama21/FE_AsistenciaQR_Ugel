@@ -9,7 +9,7 @@ const Header: React.FC = () => {
     const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
     return (
-        <header className="fixed top-0 left-0 md:left-64 right-0 h-16 bg-white border-b border-gray-100 shadow-sm z-30 flex items-center justify-between px-4 md:px-8">
+        <header className="fixed top-0 left-0 md:left-64 right-0 h-16 bg-white border-b border-gray-100 shadow-sm z-30 flex items-center justify-between px-4 md:px-8" id="header-dashboard">
             {/* Lado izquierdo - título de página (opcional) */}
             <div className="hidden md:flex items-center gap-2">
                 <div className="w-1 h-5 bg-blue-700 rounded-full"></div>

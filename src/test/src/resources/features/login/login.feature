@@ -1,4 +1,4 @@
-@test @login @authentication @HU-001 @DailyTest @WeekendTest
+@test @login @authentication @HU-001 @WeekendTest
 Feature: Inicio de sesión en SauceDemo
 
     Como usuario de SauceDemo

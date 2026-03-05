@@ -16,10 +16,10 @@ export class LoginPage {
         await this.page.goto(url);
     }
 
-    async fillUsername(username: string) {
-        await this.loginLocator.usernameTextBox.waitFor({ state: 'visible' });
-        await this.loginLocator.usernameTextBox.isEnabled();
-        await this.loginLocator.usernameTextBox.fill(username);
+    async fillEmail(email: string) {
+        await this.loginLocator.emailTextBox.waitFor({ state: 'visible' });
+        await this.loginLocator.emailTextBox.isEnabled();
+        await this.loginLocator.emailTextBox.fill(email);
     }
 
     async fillPassword(password: string) {
@@ -33,12 +33,13 @@ export class LoginPage {
     }
 
     async verifySuccessfulLogin() {
-        await expect(this.loginLocator.headerProducts).toBeVisible();
+        await expect(this.loginLocator.headerDashboard).toBeVisible();
+        console.log('✅ Login exitoso, redirigido a la aplicacion de QR UGEL');
     }
 
     async verifyErrorMessage(expectedMessage: string) {
-        await expect(this.loginLocator.incorrectCredentialsAlert).toBeVisible();
-        await expect(this.loginLocator.incorrectCredentialsAlert).toContainText(expectedMessage);
+        await expect(this.loginLocator.errorMessage).toBeVisible();
+        await expect(this.loginLocator.errorMessage).toContainText(expectedMessage);
         console.log(`✅ Mensaje de error validado: "${expectedMessage}"`);
     }
 };
