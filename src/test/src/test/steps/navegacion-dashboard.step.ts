@@ -25,12 +25,17 @@ Then('debe incluir las opciones Home, Usuarios, Personal, Asistencia y Reporte A
     await sidebarPage.verifyOptionsSidebar();
 });
 
-When('hago clic en la opción {string} del menú lateral', async ({}, arg: string) => {
-  // Step: When hago clic en la opción "Home" del menú lateral
-  // From: src\resources\features\dashboard\navegacion-dashboard.feature:19:9
+When('hago clic en la opción {string} del menú lateral', async ({ page }, arg: string) => {
+    const sidebarPage = new SidebarPage(page);
+    await sidebarPage.clickOption(arg);
 });
 
-Then('soy dirigido a la pantalla de {string}', async ({}, arg: string) => {
-  // Step: Then soy dirigido a la pantalla de "Home"
-  // From: src\resources\features\dashboard\navegacion-dashboard.feature:20:9
+Then('soy dirigido a la pantalla de {string}', async ({page}, arg: string) => {
+    const sidebarPage = new SidebarPage(page);
+    await sidebarPage.verifyNavigation(arg);
+});
+
+Then('el botón Cerrar Sesión debe estar visible en el menú lateral', async ({page}) => {
+    const sidebarPage = new SidebarPage(page);
+    await sidebarPage.verifyLogoutButton();
 });
