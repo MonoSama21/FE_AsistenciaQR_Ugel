@@ -38,7 +38,7 @@ Feature: Inicio de sesión en SauceDemo
         And hace clic en el botón Login
         Then debe ver un mensaje de error: "Epic sadface: Username is required"
 
-    @CP-006 @regression @negative @validation @DailyTest @unhappy-path
+    @CP-006 @regression @negative @validation @unhappy-path
     Scenario: CP-006 Login fallido con campo de contraseña vacío
         When ingresa un nombre de usuario válido y deja vacío el campo de contraseña
         And hace clic en el botón Login
