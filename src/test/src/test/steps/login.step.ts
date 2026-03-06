@@ -83,3 +83,5 @@ When('ingresa un nombre de usuario válido y deja vacío el campo de contraseña
   const loginPage = new LoginPage(page);
   await loginPage.fillEmail('standard_user');
 });
+
+
