@@ -14,7 +14,7 @@ Feature: Navegación del Dashboard
         When el menú lateral debe estar visible
         Then debe incluir las opciones Home, Usuarios, Personal, Asistencia y Reporte Asistencia
 
-    @CP-008 @smoke @critical @happy-path @Escenario09
+    @CP-008 @smoke @critical @happy-path @Escenario09 @ugel6
     Scenario Outline: CP-008 Navegación a la sección <opcionMenu> desde el menú lateral 
         When hago clic en la opción "<opcionMenu>" del menú lateral
         Then soy dirigido a la pantalla de "<opcionMenu>"
