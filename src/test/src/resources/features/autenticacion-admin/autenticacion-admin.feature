@@ -1,4 +1,4 @@
-@test @autenticacion @admin @HU-001 @DailyTest @REQ-F-001
+@test @autenticacion @admin @HU-001 @DailyTest @REQ-F-001 @SIAQR
 Feature: Autenticación de Usuario Administrativo
     Como administrador de UGEL Chincha
     Quiero iniciar sesión en el sistema con credenciales seguras

@@ -57,4 +57,65 @@ export class SidebarPage {
         
         console.log('✅ Todas las opciones del menú lateral están presentes, visibles y no hay opciones adicionales.');
     }    
+
+    async clickOption(optionName: string) {
+        let optionLocator;
+        switch (optionName) {
+            case 'Home':
+                optionLocator = this.sidebarLocator.optionHome;
+                break;
+            case 'Usuarios':
+                optionLocator = this.sidebarLocator.optionUsers;
+                break;
+            case 'Personal':
+                optionLocator = this.sidebarLocator.optionStaff;
+                break;
+            case 'Asistencia':
+                optionLocator = this.sidebarLocator.optionAttendance;
+                break;
+            case 'Reportes de Asistencia':
+                optionLocator = this.sidebarLocator.optionReportAttendance;
+                break;
+            default:
+                throw new Error(`❌ Opción no reconocida: "${optionName}"`);
+        }
+        await optionLocator.click();
+        console.log(`✅ Clic en la opción "${optionName}" del menú lateral.`);
+    }
+
+    async verifyNavigation(optionName: string) {
+        let expectedUrlFragment;
+        switch (optionName) {
+            case 'Home':
+                expectedUrlFragment = 'home';
+                break;
+            case 'Usuarios':
+                expectedUrlFragment = 'usuarios';
+                break;
+            case 'Personal':
+                expectedUrlFragment = 'personal';
+                break;
+            case 'Asistencia':
+                expectedUrlFragment = 'asistencia';
+                break;
+            case 'Reportes de Asistencia':
+                expectedUrlFragment = 'reporte-asistencia';
+                break;
+            default:
+                throw new Error(`❌ Opción no reconocida para navegación: "${optionName}"`);
+        }
+        await expect(this.page).toHaveURL(new RegExp(`${expectedUrlFragment}$`));
+        console.log(`✅ Navegación a la pantalla de "${optionName}" verificada correctamente.`);
+    }
+
+    async verifyLogoutButton() {
+        await expect(this.sidebarLocator.btnLogout).toBeVisible();
+        console.log('✅ El botón Cerrar Sesión está visible en el menú lateral.');
+    }
+
+    async clickLogoutButton() {
+        await this.sidebarLocator.btnLogout.click();
+        console.log('✅ Clic en el botón Cerrar Sesión del menú lateral.');
+    }
+
 };

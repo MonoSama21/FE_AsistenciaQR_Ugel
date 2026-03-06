@@ -42,4 +42,11 @@ export class LoginPage {
         await expect(this.loginLocator.errorMessage).toContainText(expectedMessage);
         console.log(`✅ Mensaje de error validado: "${expectedMessage}"`);
     }
+
+    async verifyLoginScreen() {
+        await expect(this.loginLocator.emailTextBox).toBeVisible();
+        await expect(this.loginLocator.passwordTextBox).toBeVisible();
+        await expect(this.loginLocator.loginButton).toBeVisible();
+        console.log('✅ Pantalla de login validada correctamente.');
+    }
 };

@@ -1,4 +1,4 @@
-@test @dashboard @navegacion @HU-010 @DailyTest @REQ-F-010
+@test @dashboard @navegacion @HU-010 @DailyTest @REQ-F-010 @SIAQR
 Feature: Navegación del Dashboard
     Como administrador de UGEL Chincha
     Quiero navegar fácilmente entre las diferentes secciones del sistema
@@ -26,5 +26,14 @@ Feature: Navegación del Dashboard
         | Personal                |
         | Asistencia              |
         | Reportes de Asistencia  |
+
+   @CP-014 @regression @ui @Escenario14 @ugel7
+    Scenario: CP-014 Botón Cerrar Sesión siempre accesible en el menú
+        Then el botón Cerrar Sesión debe estar visible en el menú lateral
+
+    #@CP-015 @regression @ui @Escenario15
+    #Scenario: CP-015 Nombre del usuario y botón de configuración visible en la cabecera
+    #    Then el nombre del usuario debe estar visible en la cabecera superior
+    #    And el botón de configuración debe estar accesible en la cabecera
 
 

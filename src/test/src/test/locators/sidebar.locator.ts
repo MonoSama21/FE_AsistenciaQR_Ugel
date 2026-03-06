@@ -40,6 +40,10 @@ export class SidebarLocator {
         return this.page.locator('#menu-reporte-asistencia');
     }
 
+    get btnLogout(){
+        return this.page.locator('#btn-cerrar-sesion');
+    }
+
     // Obtener todas las opciones del menú (para validar que no haya opciones adicionales)
     get allMenuOptions(){
         return this.page.locator('#sidebar-menu nav ul li a');
