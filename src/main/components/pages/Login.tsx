@@ -88,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           {/* Header del formulario */}
           <div className="mb-8 text-center md:text-left">
             <div className="hidden md:flex items-center gap-3 mb-2">
-              <img src="./public/logoGP.png" alt="Logo" className="w-10 h-10 object-contain" />
+              <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png" alt="Logo" className="w-10 h-10 object-contain" />
               <span className="text-blue-800 font-bold text-sm uppercase tracking-widest">UGEL Chincha</span>
             </div>
             <h2 className="text-3xl font-extrabold text-blue-900 mb-2">Bienvenido</h2>
