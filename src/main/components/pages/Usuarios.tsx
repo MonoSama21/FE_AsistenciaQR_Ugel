@@ -104,10 +104,10 @@ const Usuarios = () => {
                     {/* Encabezado */}
                     <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-blue-900 tracking-tight">LISTADO DE USUARIOS</h1>
+                            <h1 id="titulo-listado-usuarios" data-testid="page-title" className="text-2xl font-extrabold text-blue-900 tracking-tight">LISTADO DE USUARIOS</h1>
                             <p className="text-gray-400 text-xs mt-0.5">Gestión de acceso al sistema</p>
                         </div>
-                        <button onClick={abrirModal} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-blue-800/20 transition-all">
+                        <button id="btn-nuevo-usuario" data-testid="btn-new-user" onClick={abrirModal} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-blue-800/20 transition-all">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
@@ -123,6 +123,8 @@ const Usuarios = () => {
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <span>Mostrar</span>
                                 <select
+                                    id="select-limite"
+                                    data-testid="select-limit"
                                     value={limite}
                                     onChange={e => handleLimiteChange(Number(e.target.value))}
                                     className="border border-gray-200 bg-gray-50 rounded-lg px-2 py-1.5 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all cursor-pointer">
@@ -138,6 +140,8 @@ const Usuarios = () => {
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500">Buscar:</span>
                                 <input
+                                    id="input-buscar-usuario"
+                                    data-testid="search-input"
                                     type="text"
                                     value={buscar}
                                     onChange={e => setBuscar(e.target.value)}
@@ -149,15 +153,15 @@ const Usuarios = () => {
 
                         {/* Tabla */}
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table id="tabla-usuarios" data-testid="users-table" className="w-full text-sm">
                                 <thead>
                                     <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
-                                        <th className="px-5 py-3 text-left font-semibold w-10">#</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Usuario</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Rol</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Empleado</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Estado</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Acción</th>
+                                        <th id="col-numero" data-testid="column-number" className="px-5 py-3 text-left font-semibold w-10">#</th>
+                                        <th id="col-usuario" data-testid="column-usuario" className="px-5 py-3 text-left font-semibold">Usuario</th>
+                                        <th id="col-rol" data-testid="column-rol" className="px-5 py-3 text-left font-semibold">Rol</th>
+                                        <th id="col-empleado" data-testid="column-empleado" className="px-5 py-3 text-left font-semibold">Empleado</th>
+                                        <th id="col-estado" data-testid="column-estado" className="px-5 py-3 text-left font-semibold">Estado</th>
+                                        <th id="col-accion" data-testid="column-accion" className="px-5 py-3 text-left font-semibold">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -206,13 +210,13 @@ const Usuarios = () => {
                                                 </td>
                                                 <td className="px-5 py-3">
                                                     <div className="flex items-center gap-1.5">
-                                                        <button className="px-3 py-1 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-700 font-semibold text-xs transition-colors border border-yellow-200">
+                                                        <button data-testid="btn-editar-usuario" className="px-3 py-1 rounded-lg bg-yellow-50 hover:bg-yellow-100 text-yellow-700 font-semibold text-xs transition-colors border border-yellow-200">
                                                             Editar
                                                         </button>
-                                                        <button className="px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs transition-colors border border-red-200">
+                                                        <button data-testid="btn-eliminar-usuario" className="px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs transition-colors border border-red-200">
                                                             Eliminar
                                                         </button>
-                                                        <button className="px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition-colors border border-blue-200">
+                                                        <button data-testid="btn-ver-usuario" className="px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition-colors border border-blue-200">
                                                             Ver
                                                         </button>
                                                     </div>
@@ -232,25 +236,33 @@ const Usuarios = () => {
                             </span>
                             <div className="flex items-center gap-1">
                                 <button
+                                    id="btn-primera-pagina"
+                                    data-testid="btn-first-page"
                                     onClick={() => setPagina(1)}
                                     disabled={pagina === 1}
                                     className="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">
                                     «
                                 </button>
                                 <button
+                                    id="btn-pagina-anterior"
+                                    data-testid="btn-prev-page"
                                     onClick={() => setPagina(p => Math.max(1, p - 1))}
                                     disabled={pagina === 1}
                                     className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">
                                     Anterior
                                 </button>
-                                <span className="px-3 py-1.5 rounded-lg bg-blue-800 text-white font-bold text-xs">{pagina}</span>
+                                <span id="pagina-actual" data-testid="current-page" className="px-3 py-1.5 rounded-lg bg-blue-800 text-white font-bold text-xs">{pagina}</span>
                                 <button
+                                    id="btn-pagina-siguiente"
+                                    data-testid="btn-next-page"
                                     onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
                                     disabled={pagina === totalPaginas}
                                     className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">
                                     Siguiente
                                 </button>
                                 <button
+                                    id="btn-ultima-pagina"
+                                    data-testid="btn-last-page"
                                     onClick={() => setPagina(totalPaginas)}
                                     disabled={pagina === totalPaginas}
                                     className="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">
@@ -265,7 +277,7 @@ const Usuarios = () => {
 
             {/* Modal Nuevo Usuario */}
             {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div id="modal-nuevo-usuario" data-testid="modal-new-user" className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div className="absolute inset-0 bg-black/50" onClick={() => setModalOpen(false)} />
 
@@ -292,23 +304,23 @@ const Usuarios = () => {
                         </div>
 
                         {/* Formulario */}
-                        <form onSubmit={crearUsuario} className="p-6 flex flex-col gap-4">
+                        <form id="form-nuevo-usuario" data-testid="form-new-user" onSubmit={crearUsuario} className="p-6 flex flex-col gap-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="col-span-2">
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Nombre completo</label>
-                                    <input type="text" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })}
+                                    <input id="input-nombre" data-testid="input-nombre" type="text" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="Nombre completo" required />
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Correo electrónico</label>
-                                    <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                                    <input id="input-email" data-testid="input-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="correo@ejemplo.com" required />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Rol</label>
-                                    <select value={form.rol} onChange={e => setForm({ ...form, rol: e.target.value })}
+                                    <select id="select-rol" data-testid="select-rol" value={form.rol} onChange={e => setForm({ ...form, rol: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all cursor-pointer">
                                         <option value="Admin">Admin</option>
                                         <option value="Personal">Personal</option>
@@ -316,27 +328,27 @@ const Usuarios = () => {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Teléfono</label>
-                                    <input type="tel" value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })}
+                                    <input id="input-telefono" data-testid="input-telefono" type="tel" value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="999 999 999" />
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Contraseña</label>
-                                    <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
+                                    <input id="input-password" data-testid="input-password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="••••••••" required />
                                 </div>
                             </div>
 
-                            {successCrear && <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successCrear}</div>}
-                            {errorCrear && <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorCrear}</div>}
+                            {successCrear && <div id="mensaje-exito" data-testid="success-message" className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successCrear}</div>}
+                            {errorCrear && <div id="mensaje-error" data-testid="error-message" className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorCrear}</div>}
 
                             <div className="flex gap-3 pt-1">
-                                <button type="button" onClick={() => setModalOpen(false)}
+                                <button id="btn-cancelar-modal" data-testid="btn-cancel-modal" type="button" onClick={() => setModalOpen(false)}
                                     className="flex-1 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all text-sm">
                                     Cancelar
                                 </button>
-                                <button type="submit" disabled={loadingCrear}
+                                <button id="btn-guardar-usuario" data-testid="btn-save-user" type="submit" disabled={loadingCrear}
                                     className="flex-1 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 text-sm">
                                     {loadingCrear ? 'Guardando...' : 'Crear usuario'}
                                 </button>
