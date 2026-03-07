@@ -11,7 +11,7 @@ Feature: Gestión de Usuarios Administrativos
         And hago clic en la opción "Usuarios" del menú lateral
 
     @CP-032 @smoke @critical @happy-path @Escenario32 @ugel9
-    Scenario Outline: CP-032 Visualización del listado completo de usuarios administrativos
+    Scenario Outline: CP-032 Visualización de la columna <columna> del listado completo de usuarios administrativos
         Then debo ver la columna "<columna>"
         Examples:
             | columna     |
