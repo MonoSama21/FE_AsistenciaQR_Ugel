@@ -32,7 +32,7 @@ const Home = () => {
                         <div className="p-6 md:p-8">
                             <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 shadow-inner bg-gray-100 object-cover" style={{ height: '550px' }}>
                                 <img
-                                    src="../public/fondo.jpg"
+                                    src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813163/fondo_c5fpdp.jpg"
                                     alt="Foto de la UGEL Chincha"
                                     className="w-full h-full object-cover object-[center_90%]"
                                     

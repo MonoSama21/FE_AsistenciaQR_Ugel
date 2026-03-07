@@ -53,7 +53,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     <div
       className="min-h-screen flex flex-col md:flex-row"
       style={{
-        backgroundImage: `url('./public/fondo.jpg')`,
+        backgroundImage: `url('https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813163/fondo_c5fpdp.jpg')`,
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'top left',
@@ -62,7 +62,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       {/* Panel izquierdo desktop - información institucional */}
       <div className="hidden md:flex md:flex-1 items-center justify-center bg-blue-950/70 backdrop-blur-sm">
         <div className="text-center px-12">
-          <img src="./public/logoGP.png" alt="Logo UGEL" className="w-36 h-36 object-contain mx-auto mb-8 drop-shadow-2xl" />
+          <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png" alt="Logo UGEL" className="w-36 h-36 object-contain mx-auto mb-8 drop-shadow-2xl" />
           <h1 className="text-white font-extrabold text-4xl leading-tight mb-4 drop-shadow-lg">
             SIAQR UGEL<br />CHINCHA
           </h1>
@@ -83,12 +83,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <div className="w-full max-w-[95vw] md:max-w-[440px] p-6 md:p-12">
 
           {/* Logo solo en mobile */}
-          <img src="./public/logoGP.png" alt="Logo" className="w-24 h-24 object-contain mx-auto mb-6 md:hidden drop-shadow-lg" />
+          <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png" alt="Logo" className="w-24 h-24 object-contain mx-auto mb-6 md:hidden drop-shadow-lg" />
 
           {/* Header del formulario */}
           <div className="mb-8 text-center md:text-left">
             <div className="hidden md:flex items-center gap-3 mb-2">
-              <img src="./public/logoGP.png" alt="Logo" className="w-10 h-10 object-contain" />
+              <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png" alt="Logo" className="w-10 h-10 object-contain" />
               <span className="text-blue-800 font-bold text-sm uppercase tracking-widest">UGEL Chincha</span>
             </div>
             <h2 className="text-3xl font-extrabold text-blue-900 mb-2">Bienvenido</h2>

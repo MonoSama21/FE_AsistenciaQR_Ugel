@@ -108,7 +108,7 @@ const Sidebar = () => {
                     <img
                         id="logo-institucional"
                         data-testid="institutional-logo"
-                        src="../public/logoGP.png"
+                        src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png"
                         alt="Logo"
                         className="w-14 h-14 object-contain"
                     />
