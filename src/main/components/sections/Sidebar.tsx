@@ -82,21 +82,7 @@ const Sidebar = () => {
         },
     ];
     
-    const URL_API = import.meta.env.VITE_API_URL + "/configuracion";
-
-    useEffect(() => {
-        obtenerConfiguracion();
-    }, []);
-
-    const obtenerConfiguracion = async () => {
-        try {
-            const response = await axios.get(URL_API);
-            setConfiguracion(response.data);
-        } catch (error) {
-            console.error("Error al obtener la configuración:", error);
-        }
-    };
-
+    
     return (
     <>
         {/* SIDEBAR DESKTOP */}
