@@ -426,9 +426,10 @@ const Asistencia = () => {
             <main className="md:ml-64 pt-16 p-6">
                 <div className="max-w-4xl mx-auto">
                     {/* Título */}
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-black text-gray-800">REGISTRO DE ASISTENCIA</h1>
-                        <p className="text-gray-600 mt-1">Gestión de personal de la institución</p>
+                    <div className="mb-6 mt-6">
+                        <h1 className="text-2xl font-extrabold text-blue-900 tracking-tight text-center">
+                            REGISTRO DE ASISTENCIA
+                        </h1>
                     </div>
 
                     {/* Contenedor Principal */}
