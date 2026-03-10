@@ -1,6 +1,7 @@
+import postcssOklabFunction from '@csstools/postcss-oklab-function';
+
 export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
+    plugins: [
+        postcssOklabFunction({ subFeatures: { displayP3: false } })
+    ]
+};
