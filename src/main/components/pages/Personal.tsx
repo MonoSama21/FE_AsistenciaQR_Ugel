@@ -67,6 +67,8 @@ const Personal = () => {
     const [loadingCarne, setLoadingCarne] = useState(false);
     const [errorCarne, setErrorCarne] = useState<string | null>(null);
     const [descargandoPDF, setDescargandoPDF] = useState(false);
+    const [generandoMasivo, setGenerandoMasivo] = useState(false);
+    const [progresoMasivo, setProgresoMasivo] = useState({ actual: 0, total: 0 });
     const carneRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -284,6 +286,136 @@ const Personal = () => {
         });
     };
 
+    // Construye el DOM de un carné individual para html2canvas
+    const construirDomCarne = async (p: Personal): Promise<HTMLDivElement> => {
+        const logoDataURL = await convertirImagenADataURL('/logoGP.png');
+        const fotoDataURL = p.foto ? await convertirImagenADataURL(p.foto) : '';
+        const qrDataURL   = p.codigoQR ? await convertirImagenADataURL(p.codigoQR) : '';
+
+        const el = document.createElement('div');
+        el.style.cssText = 'width:300px;height:475px;background:#ffffff;position:relative;overflow:hidden;font-family:Arial,sans-serif;';
+
+        el.innerHTML = `
+            <div style="height:80px;background:linear-gradient(to right,#1e3a8a,#1d4ed8);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;position:relative;overflow:hidden;">
+                <div style="position:absolute;left:-32px;top:0;width:128px;height:128px;background:rgba(59,130,246,0.3);transform:rotate(45deg);"></div>
+                <div style="position:absolute;right:-32px;bottom:0;width:128px;height:128px;background:rgba(96,165,250,0.2);transform:rotate(-45deg);"></div>
+                <h3 style="color:#ffffff;font-weight:800;font-size:12px;letter-spacing:0.1em;z-index:10;margin:0 0 8px 0;text-align:center;font-family:Arial,sans-serif;">IDENTIFICACIÓN 2026</h3>
+                <div style="z-index:10;width:80px;height:80px;border-radius:50%;background:#ffffff;border:4px solid #ffffff;box-shadow:0 10px 15px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                    ${logoDataURL ? `<img src="${logoDataURL}" style="width:64px;height:64px;object-fit:contain;">` : '<div style="width:64px;height:64px;background:#e5e7eb;"></div>'}
+                </div>
+            </div>
+            <div style="display:flex;justify-content:center;margin:8px 0 12px 0;">
+                ${fotoDataURL
+                    ? `<img src="${fotoDataURL}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;border:4px solid #e5e7eb;box-shadow:0 4px 6px rgba(0,0,0,0.1);">`
+                    : `<div style="width:100px;height:100px;border-radius:50%;background:#e5e7eb;border:4px solid #d1d5db;display:flex;align-items:center;justify-content:center;">
+                           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                       </div>`
+                }
+            </div>
+            <div style="padding:0 24px;margin-bottom:6px;">
+                <h2 style="text-align:center;color:#1e3a8a;font-weight:900;font-size:17px;line-height:1.25;text-transform:uppercase;margin:0;font-family:Arial,sans-serif;">${p.nombres || ''}</h2>
+                <h2 style="text-align:center;color:#1e3a8a;font-weight:900;font-size:17px;line-height:1.25;text-transform:uppercase;margin:0;font-family:Arial,sans-serif;">${p.apellidos || ''}</h2>
+            </div>
+            <div style="padding:0 24px;margin-bottom:8px;">
+                <p style="text-align:center;color:#1d4ed8;font-weight:700;font-size:13px;text-transform:uppercase;margin:0;font-family:Arial,sans-serif;">${p.cargo?.cargo || 'Sin cargo'}</p>
+            </div>
+            <div style="padding:0 24px;margin-bottom:12px;">
+                <p style="text-align:center;color:#374151;font-weight:600;font-size:12px;margin:0;font-family:Arial,sans-serif;">DNI: <span style="font-weight:700;">${p.dni || ''}</span></p>
+            </div>
+            <div style="display:flex;justify-content:center;margin-bottom:50px;">
+                ${qrDataURL
+                    ? `<div style="background:#ffffff;padding:4px;"><img src="${qrDataURL}" style="width:130px;height:130px;object-fit:contain;"></div>`
+                    : `<div style="width:130px;height:130px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;"><span style="font-size:12px;color:#9ca3af;">Sin QR</span></div>`
+                }
+            </div>
+            <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(to right,#1e3a8a,#1d4ed8);"></div>
+        `;
+        return el;
+    };
+
+    const generarCarnetMasivo = async () => {
+        setGenerandoMasivo(true);
+        setProgresoMasivo({ actual: 0, total: 0 });
+        try {
+            // Obtener TODOS los registros del personal
+            const response = await axios.get(`${URL_API}/personal?pagina=1&limite=9999`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const todosPersonal: Personal[] = response.data?.personal || [];
+
+            if (todosPersonal.length === 0) {
+                alert('No hay personal registrado para generar carnés.');
+                return;
+            }
+
+            setProgresoMasivo({ actual: 0, total: todosPersonal.length });
+
+            // A4 portrait: 210 x 297 mm
+            // Layout: 2 columnas × 2 filas = 4 carnés por página
+            const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const margin  = 10;   // mm
+            const gap     = 10;   // mm entre carnés
+            const cardW   = (210 - 2 * margin - gap) / 2;   // ≈ 90 mm
+            const cardH   = (297 - 2 * margin - gap) / 2;   // ≈ 133.5 mm
+            const positions = [
+                { x: margin,          y: margin },
+                { x: margin + cardW + gap, y: margin },
+                { x: margin,          y: margin + cardH + gap },
+                { x: margin + cardW + gap, y: margin + cardH + gap },
+            ];
+
+            let isFirstPage = true;
+
+            for (let i = 0; i < todosPersonal.length; i += 4) {
+                if (!isFirstPage) pdfDoc.addPage();
+                isFirstPage = false;
+
+                const batch = todosPersonal.slice(i, i + 4);
+
+                for (let j = 0; j < batch.length; j++) {
+                    const p   = batch[j];
+                    const pos = positions[j];
+
+                    // Renderizar carné en DOM oculto
+                    const carneEl = await construirDomCarne(p);
+                    carneEl.style.position = 'fixed';
+                    carneEl.style.left     = '-9999px';
+                    carneEl.style.top      = '-9999px';
+                    document.body.appendChild(carneEl);
+
+                    try {
+                        await new Promise(r => setTimeout(r, 150));
+                        const canvas = await html2canvas(carneEl, {
+                            scale: 3,
+                            allowTaint: false,
+                            useCORS: true,
+                            logging: false,
+                            backgroundColor: '#ffffff',
+                            imageTimeout: 0,
+                            windowWidth: 300,
+                            windowHeight: 475,
+                        });
+                        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                        pdfDoc.addImage(imgData, 'JPEG', pos.x, pos.y, cardW, cardH);
+                    } finally {
+                        document.body.removeChild(carneEl);
+                    }
+
+                    setProgresoMasivo({ actual: i + j + 1, total: todosPersonal.length });
+                }
+            }
+
+            const fecha = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
+            pdfDoc.save(`Carnets_Personal_${fecha}.pdf`);
+        } catch (error: any) {
+            console.error('Error al generar carnés masivos:', error);
+            alert('Error al generar los carnés. Revisa la consola para más detalles.');
+        } finally {
+            setGenerandoMasivo(false);
+            setProgresoMasivo({ actual: 0, total: 0 });
+        }
+    };
+
     const descargarPDF = async () => {
         if (!carneRef.current || !personalCarne) return;
 
@@ -392,11 +524,28 @@ const Personal = () => {
                             <p className="text-gray-400 text-xs mt-0.5">Gestión de personal de la institución</p>
                         </div>
                         <div className="flex gap-2">
-                            <button className="flex items-center gap-2 border border-blue-800 text-blue-800 hover:bg-blue-50 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                                Carné Masivo
+                            <button
+                                onClick={generarCarnetMasivo}
+                                disabled={generandoMasivo}
+                                className="flex items-center gap-2 border border-blue-800 text-blue-800 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
+                                {generandoMasivo ? (
+                                    <>
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                        </svg>
+                                        {progresoMasivo.total > 0
+                                            ? `${progresoMasivo.actual}/${progresoMasivo.total}`
+                                            : 'Cargando...'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        Carné Masivo
+                                    </>
+                                )}
                             </button>
                             <button onClick={abrirModal} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-blue-800/20 transition-all">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
