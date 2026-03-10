@@ -520,11 +520,13 @@ const Personal = () => {
                     {/* Encabezado */}
                     <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-blue-900 tracking-tight">LISTADO DE PERSONAL</h1>
+                            <h1 id="titulo-listado-personal" data-testid="page-title" className="text-2xl font-extrabold text-blue-900 tracking-tight">LISTADO DE PERSONAL</h1>
                             <p className="text-gray-400 text-xs mt-0.5">Gestión de personal de la institución</p>
                         </div>
                         <div className="flex gap-2">
                             <button
+                                id="btn-carne-masivo"
+                                data-testid="btn-bulk-carne"
                                 onClick={generarCarnetMasivo}
                                 disabled={generandoMasivo}
                                 className="flex items-center gap-2 border border-blue-800 text-blue-800 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
@@ -547,7 +549,7 @@ const Personal = () => {
                                     </>
                                 )}
                             </button>
-                            <button onClick={abrirModal} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-blue-800/20 transition-all">
+                            <button id="btn-nuevo-personal" data-testid="btn-new-personal" onClick={abrirModal} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 active:bg-blue-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-blue-800/20 transition-all">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
@@ -563,7 +565,7 @@ const Personal = () => {
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <span>Mostrar</span>
-                                <select value={limite} onChange={e => handleLimiteChange(Number(e.target.value))}
+                                <select id="select-limite" data-testid="select-limit" value={limite} onChange={e => handleLimiteChange(Number(e.target.value))}
                                     className="border border-gray-200 bg-gray-50 rounded-lg px-2 py-1.5 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all cursor-pointer">
                                     <option value={5}>5</option>
                                     <option value={10}>10</option>
@@ -576,7 +578,7 @@ const Personal = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500">Buscar:</span>
-                                <input type="text" value={buscar} onChange={e => setBuscar(e.target.value)}
+                                <input id="input-buscar-personal" data-testid="search-input" type="text" value={buscar} onChange={e => setBuscar(e.target.value)}
                                     className="border border-gray-200 bg-gray-50 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all w-48"
                                     placeholder="Buscar..." />
                             </div>
@@ -584,16 +586,16 @@ const Personal = () => {
 
                         {/* Tabla */}
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table id="tabla-personal" data-testid="personal-table" className="w-full text-sm">
                                 <thead>
                                     <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
-                                        <th className="px-5 py-3 text-left font-semibold w-10">#</th>
-                                        <th className="px-5 py-3 text-left font-semibold">DNI</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Personal</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Cargo</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Foto</th>
-                                        <th className="px-5 py-3 text-left font-semibold">QR</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Acción</th>
+                                        <th id="col-numero" className="px-5 py-3 text-left font-semibold w-10">#</th>
+                                        <th id="col-dni" className="px-5 py-3 text-left font-semibold">DNI</th>
+                                        <th id="col-personal" className="px-5 py-3 text-left font-semibold">Personal</th>
+                                        <th id="col-cargo" className="px-5 py-3 text-left font-semibold">Cargo</th>
+                                        <th id="col-foto" className="px-5 py-3 text-left font-semibold">Foto</th>
+                                        <th id="col-qr" className="px-5 py-3 text-left font-semibold">QR</th>
+                                        <th id="col-accion" className="px-5 py-3 text-left font-semibold">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -670,14 +672,14 @@ const Personal = () => {
                                 {totalRegistros > 0 && <> de <span className="font-bold text-gray-700">{totalRegistros}</span> registros</>}
                             </span>
                             <div className="flex items-center gap-1">
-                                <button onClick={() => setPagina(1)} disabled={pagina === 1}
+                                <button id="btn-primera-pagina" data-testid="btn-first-page" onClick={() => setPagina(1)} disabled={pagina === 1}
                                     className="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">«</button>
-                                <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
+                                <button id="btn-pagina-anterior" data-testid="btn-prev-page" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
                                     className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">Anterior</button>
-                                <span className="px-3 py-1.5 rounded-lg bg-blue-800 text-white font-bold text-xs">{pagina}</span>
-                                <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
+                                <span id="pagina-actual" data-testid="current-page" className="px-3 py-1.5 rounded-lg bg-blue-800 text-white font-bold text-xs">{pagina}</span>
+                                <button id="btn-pagina-siguiente" data-testid="btn-next-page" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
                                     className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">Siguiente</button>
-                                <button onClick={() => setPagina(totalPaginas)} disabled={pagina === totalPaginas}
+                                <button id="btn-ultima-pagina" data-testid="btn-last-page" onClick={() => setPagina(totalPaginas)} disabled={pagina === totalPaginas}
                                     className="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-600 transition-colors text-xs">»</button>
                             </div>
                         </div>
@@ -716,19 +718,19 @@ const Personal = () => {
                             <div className="grid grid-cols-2 gap-3 overflow-visible">
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">DNI</label>
-                                    <input type="text" value={form.dni} onChange={e => setForm({ ...form, dni: e.target.value })}
+                                    <input id="input-dni" data-testid="input-dni" type="text" value={form.dni} onChange={e => setForm({ ...form, dni: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="12345678" maxLength={8} required />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Nombres</label>
-                                    <input type="text" value={form.nombres} onChange={e => setForm({ ...form, nombres: e.target.value })}
+                                    <input id="input-nombres" data-testid="input-nombres" type="text" value={form.nombres} onChange={e => setForm({ ...form, nombres: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="Nombres" required />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Apellidos</label>
-                                    <input type="text" value={form.apellidos} onChange={e => setForm({ ...form, apellidos: e.target.value })}
+                                    <input id="input-apellidos" data-testid="input-apellidos" type="text" value={form.apellidos} onChange={e => setForm({ ...form, apellidos: e.target.value })}
                                         className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
                                         placeholder="Apellidos" required />
                                 </div>
@@ -736,6 +738,8 @@ const Personal = () => {
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">Cargo</label>
                                     <div className="relative dropdown-cargo-container">
                                         <input 
+                                            id="input-buscar-cargo"
+                                            data-testid="input-buscar-cargo"
                                             type="text" 
                                             value={buscarCargo} 
                                             onChange={e => {
@@ -789,15 +793,15 @@ const Personal = () => {
                                 </div>
                             </div>
 
-                            {successCrear && <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successCrear}</div>}
-                            {errorCrear && <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorCrear}</div>}
+                            {successCrear && <div id="msg-success-crear" data-testid="msg-success-crear" className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successCrear}</div>}
+                            {errorCrear && <div id="msg-error-crear" data-testid="msg-error-crear" className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorCrear}</div>}
 
                             <div className="flex gap-3 pt-1">
-                                <button type="button" onClick={() => setModalOpen(false)}
+                                <button id="btn-cerrar-modal-personal" data-testid="btn-cancel-personal" type="button" onClick={() => setModalOpen(false)}
                                     className="flex-1 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all text-sm">
                                     Cerrar
                                 </button>
-                                <button type="submit" disabled={loadingCrear}
+                                <button id="btn-registrar-personal" data-testid="btn-submit-personal" type="submit" disabled={loadingCrear}
                                     className="flex-1 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 text-sm">
                                     {loadingCrear ? 'Registrando...' : 'Registrar'}
                                 </button>
@@ -852,6 +856,7 @@ const Personal = () => {
                                         onChange={handleFileChange}
                                         className="hidden"
                                         id="file-input-foto"
+                                        data-testid="file-input-foto"
                                     />
                                     <label
                                         htmlFor="file-input-foto"
@@ -876,11 +881,13 @@ const Personal = () => {
                                 </div>
                             )}
 
-                            {successFoto && <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successFoto}</div>}
-                            {errorFoto && <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorFoto}</div>}
+                            {successFoto && <div id="msg-success-foto" data-testid="msg-success-foto" className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successFoto}</div>}
+                            {errorFoto && <div id="msg-error-foto" data-testid="msg-error-foto" className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-xs">{errorFoto}</div>}
 
                             <div className="flex gap-3 pt-1">
                                 <button
+                                    id="btn-cancelar-foto"
+                                    data-testid="btn-cancel-foto"
                                     type="button"
                                     onClick={() => setModalFoto(false)}
                                     className="flex-1 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all text-sm"
@@ -888,6 +895,8 @@ const Personal = () => {
                                     Cancelar
                                 </button>
                                 <button
+                                    id="btn-subir-foto"
+                                    data-testid="btn-upload-foto"
                                     onClick={subirFoto}
                                     disabled={loadingFoto || !archivoFoto}
                                     className="flex-1 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -935,7 +944,7 @@ const Personal = () => {
                                     <p className="text-gray-500 text-sm">Cargando informaci\u00f3n del carn\u00e9...</p>
                                 </div>
                             ) : errorCarne ? (
-                                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+                                <div id="msg-error-carne" data-testid="msg-error-carne" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
                                     {errorCarne}
                                 </div>
                             ) : personalCarne ? (
@@ -1052,12 +1061,16 @@ const Personal = () => {
                                     {/* Botones */}
                                     <div className="flex gap-3 w-full max-w-md">
                                         <button
+                                            id="btn-cerrar-modal-carne"
+                                            data-testid="btn-close-carne"
                                             onClick={() => setModalCarne(false)}
                                             className="flex-1 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all text-sm"
                                         >
                                             Cerrar
                                         </button>
                                         <button
+                                            id="btn-descargar-pdf"
+                                            data-testid="btn-download-pdf"
                                             onClick={descargarPDF}
                                             disabled={descargandoPDF}
                                             className="flex-1 py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
