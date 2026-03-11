@@ -187,14 +187,14 @@ const Asistencia = () => {
                     hora: horaRegistro
                 });
 
-                // Reproducir mensaje de voz y ESPERAR a que termine
-                const nombreCompleto = `${qrData.nombres} ${qrData.apellidos}`;
-                await reproducirVoz(tipoFinal, nombreCompleto, horaRegistro);
+                // Reproducir mensaje de voz y ESPERAR a que termine (solo primer nombre)
+                const primerNombre = qrData.nombres.split(' ')[0];
+                await reproducirVoz(tipoFinal, primerNombre, horaRegistro);
                 
-                console.log('✅ Audio completado, esperando 2 segundos adicionales...');
+                console.log('✅ Audio completado, esperando 1.5 segundos adicionales...');
                 
-                // Esperar 2 segundos adicionales después del audio para que el usuario vea el modal
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Esperar 1.5 segundos adicionales después del audio para que el usuario vea el modal (total ~3 segundos)
+                await new Promise(resolve => setTimeout(resolve, 1500));
 
                 // Cerrar modal y permitir nuevos escaneos
                 console.log('🔄 Cerrando modal, listo para el siguiente escaneo...');
@@ -222,10 +222,10 @@ const Asistencia = () => {
             procesandoQRRef.current = false;
             console.log('▶️ Sistema listo para nuevos escaneos después de error');
 
-            // Limpiar mensaje después de 5 segundos
+            // Limpiar mensaje después de 3 segundos
             setTimeout(() => {
                 setMensaje({ tipo: '', texto: '' });
-            }, 5000);
+            }, 3000);
         } finally {
             setLoading(false);
         }
@@ -283,16 +283,37 @@ const Asistencia = () => {
     // Detener escaneo
     const detenerEscaneo = async () => {
         try {
-            if (html5QrCodeRef.current && isScanning) {
-                await html5QrCodeRef.current.stop();
-                setIsScanning(false);
-                setQrDetectado(false);
-                procesandoQRRef.current = false; // Resetear referencia
-                setMensaje({ tipo: '', texto: '' });
-                console.log('⏹️ Scanner detenido');
+            if (html5QrCodeRef.current) {
+                try {
+                    // Intentar detener el scanner con timeout de seguridad
+                    await Promise.race([
+                        html5QrCodeRef.current.stop(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+                    ]);
+                    console.log('⏹️ Scanner detenido correctamente');
+                } catch (stopError) {
+                    console.warn('Error al detener scanner (continuando limpieza):', stopError);
+                }
+                
+                // Limpiar referencias y estado SIEMPRE, incluso si stop() falló
+                html5QrCodeRef.current = null;
+                scannerInitializedRef.current = false;
             }
+            
+            // Resetear todos los estados (fuera del bloque del scanner para asegurar ejecución)
+            setIsScanning(false);
+            setQrDetectado(false);
+            procesandoQRRef.current = false;
+            setMensaje({ tipo: '', texto: '' });
+            console.log('✅ Estado de escaneo reseteado completamente');
         } catch (error) {
-            console.error('Error al detener escaneo:', error);
+            console.error('Error crítico al detener escaneo:', error);
+            // Forzar reset de estados incluso en error crítico
+            setIsScanning(false);
+            setQrDetectado(false);
+            procesandoQRRef.current = false;
+            html5QrCodeRef.current = null;
+            scannerInitializedRef.current = false;
         }
     };
 
