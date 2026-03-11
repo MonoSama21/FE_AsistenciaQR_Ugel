@@ -24,6 +24,7 @@ const Sidebar = () => {
 
     const location = useLocation();
     const navigate = useNavigate();
+    const userRol = localStorage.getItem('userRol') || '';
 
     const handleLogout = () => {
         // Eliminar datos de autenticación
@@ -81,6 +82,13 @@ const Sidebar = () => {
             )
         },
     ];
+
+    // Filtrar opciones según el rol del usuario
+    const opcionesVisibles = userRol === 'Personal'
+        ? optionsSidebar.filter(option => 
+            option.label === 'Home' || option.label === 'Asistencia'
+          )
+        : optionsSidebar;
     
     
     return (
@@ -107,7 +115,7 @@ const Sidebar = () => {
             <nav className="flex-1 py-5 px-3 overflow-y-auto custom-scrollbar">
                 <p className="text-blue-400/60 text-[10px] font-bold uppercase tracking-widest px-3 mb-3">Menú Principal</p>
                 <ul className="space-y-1">
-                    {optionsSidebar.map((option, index) => {
+                    {opcionesVisibles.map((option, index) => {
                         const menuId = option.label.toLowerCase().replace(/\s+/g, '-');
                         return (
                             <li key={index}>
@@ -160,7 +168,7 @@ const Sidebar = () => {
         {/* NAVIGATION BAR MÓVIL */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-950 border-t border-white/10 z-50 shadow-2xl" id="mobile-navbar" data-testid="mobile-navbar">
             <div className="flex justify-around items-center px-1 py-2">
-                {optionsSidebar.map((option, index) => {
+                {opcionesVisibles.map((option, index) => {
                     const menuId = option.label.toLowerCase().replace(/\s+/g, '-');
                     return (
                         <Link
