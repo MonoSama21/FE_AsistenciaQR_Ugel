@@ -71,6 +71,10 @@ const Personal = () => {
     const [progresoMasivo, setProgresoMasivo] = useState({ actual: 0, total: 0 });
     const carneRef = useRef<HTMLDivElement>(null);
 
+    // Selección múltiple para descarga masiva
+    const [seleccionados, setSeleccionados] = useState<number[]>([]);
+    const [seleccionarTodos, setSeleccionarTodos] = useState(false);
+
     useEffect(() => {
         obtenerPersonal(pagina, limite);
     }, [pagina, limite]);
@@ -334,17 +338,22 @@ const Personal = () => {
     };
 
     const generarCarnetMasivo = async () => {
+        if (seleccionados.length === 0) {
+            alert('Debe seleccionar al menos un registro para generar carnés.');
+            return;
+        }
+
         setGenerandoMasivo(true);
         setProgresoMasivo({ actual: 0, total: 0 });
         try {
-            // Obtener TODOS los registros del personal
+            // Obtener todos los registros del backend para tener todos los seleccionados
             const response = await axios.get(`${URL_API}/personal?pagina=1&limite=9999`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const todosPersonal: Personal[] = response.data?.personal || [];
+            const todosPersonal: Personal[] = (response.data?.personal || []).filter((p: Personal) => p.id && seleccionados.includes(p.id));
 
             if (todosPersonal.length === 0) {
-                alert('No hay personal registrado para generar carnés.');
+                alert('No hay registros seleccionados para generar carnés.');
                 return;
             }
 
@@ -407,6 +416,9 @@ const Personal = () => {
 
             const fecha = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
             pdfDoc.save(`Carnets_Personal_${fecha}.pdf`);
+            // Limpiar selección después de descargar
+            setSeleccionados([]);
+            setSeleccionarTodos(false);
         } catch (error: any) {
             console.error('Error al generar carnés masivos:', error);
             alert('Error al generar los carnés. Revisa la consola para más detalles.');
@@ -509,6 +521,45 @@ const Personal = () => {
         p.dni?.includes(buscar)
     );
 
+    // Manejo de selección
+    const handleSeleccionarTodos = async () => {
+        if (seleccionarTodos) {
+            // Deseleccionar todos
+            setSeleccionados([]);
+            setSeleccionarTodos(false);
+        } else {
+            // Seleccionar TODOS los registros de todas las páginas
+            try {
+                const response = await axios.get(`${URL_API}/personal?pagina=1&limite=9999`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const todosIds = (response.data?.personal || []).filter((p: Personal) => p.id).map((p: Personal) => p.id!);
+                setSeleccionados(todosIds);
+                setSeleccionarTodos(true);
+            } catch (error) {
+                console.error('Error al obtener todos los IDs:', error);
+                alert('Error al seleccionar todos los registros');
+            }
+        }
+    };
+
+    const handleSeleccionarIndividual = (id: number) => {
+        if (seleccionados.includes(id)) {
+            setSeleccionados(seleccionados.filter(selId => selId !== id));
+        } else {
+            setSeleccionados([...seleccionados, id]);
+        }
+    };
+
+    // Actualizar estado del checkbox de seleccionar todos basado en página actual
+    useEffect(() => {
+        const idsVisibles = filtrados.filter(p => p.id).map(p => p.id!);
+        const todosVisiblesSeleccionados = idsVisibles.length > 0 && idsVisibles.every(id => seleccionados.includes(id));
+        // Si todos los visibles están seleccionados pero no tenemos todos los registros globales, mostrar como parcialmente seleccionado
+        // Para simplificar, mostramos checked si todos los visibles están seleccionados
+        setSeleccionarTodos(todosVisiblesSeleccionados);
+    }, [seleccionados, filtrados]);
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Sidebar />
@@ -522,13 +573,35 @@ const Personal = () => {
                         <div>
                             <h1 id="titulo-listado-personal" data-testid="page-title" className="text-2xl font-extrabold text-blue-900 tracking-tight">LISTADO DE PERSONAL</h1>
                             <p className="text-gray-400 text-xs mt-0.5">Gestión de personal de la institución</p>
+                            {seleccionados.length > 0 && (
+                                <div className="mt-2 inline-flex items-center gap-2">
+                                    <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-200">
+                                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        {seleccionados.length} registro{seleccionados.length !== 1 ? 's' : ''} seleccionado{seleccionados.length !== 1 ? 's' : ''}
+                                    </div>
+                                    <button
+                                        id="btn-limpiar-seleccion"
+                                        data-testid="btn-clear-selection"
+                                        onClick={() => { setSeleccionados([]); setSeleccionarTodos(false); }}
+                                        className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-red-600 transition-colors"
+                                        title="Limpiar selección"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Limpiar
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="flex gap-2">
                             <button
                                 id="btn-carne-masivo"
                                 data-testid="btn-bulk-carne"
                                 onClick={generarCarnetMasivo}
-                                disabled={generandoMasivo}
+                                disabled={generandoMasivo || seleccionados.length === 0}
                                 className="flex items-center gap-2 border border-blue-800 text-blue-800 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
                                 {generandoMasivo ? (
                                     <>
@@ -545,7 +618,7 @@ const Personal = () => {
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                        Carné Masivo
+                                        Carné Masivo {seleccionados.length > 0 && `(${seleccionados.length})`}
                                     </>
                                 )}
                             </button>
@@ -589,6 +662,17 @@ const Personal = () => {
                             <table id="tabla-personal" data-testid="personal-table" className="w-full text-sm">
                                 <thead>
                                     <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                                        <th id="col-seleccion" className="px-5 py-3 text-center font-semibold w-12">
+                                            <input
+                                                id="checkbox-seleccionar-todos"
+                                                data-testid="checkbox-select-all"
+                                                type="checkbox"
+                                                checked={seleccionarTodos}
+                                                onChange={handleSeleccionarTodos}
+                                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                                title="Seleccionar todos los registros (todas las páginas)"
+                                            />
+                                        </th>
                                         <th id="col-numero" className="px-5 py-3 text-left font-semibold w-10">#</th>
                                         <th id="col-dni" className="px-5 py-3 text-left font-semibold">DNI</th>
                                         <th id="col-personal" className="px-5 py-3 text-left font-semibold">Personal</th>
@@ -601,7 +685,7 @@ const Personal = () => {
                                 <tbody className="divide-y divide-gray-100">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={7} className="px-5 py-10 text-center text-gray-400 text-sm">
+                                            <td colSpan={8} className="px-5 py-10 text-center text-gray-400 text-sm">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <svg className="w-4 h-4 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -613,13 +697,23 @@ const Personal = () => {
                                         </tr>
                                     ) : filtrados.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-5 py-10 text-center text-gray-400 text-sm">
+                                            <td colSpan={8} className="px-5 py-10 text-center text-gray-400 text-sm">
                                                 No se encontraron registros.
                                             </td>
                                         </tr>
                                     ) : (
                                         filtrados.map((p, index) => (
                                             <tr key={p.id} className="hover:bg-blue-50/40 transition-colors">
+                                                <td className="px-5 py-3 text-center">
+                                                    <input
+                                                        id={`checkbox-personal-${p.id}`}
+                                                        data-testid={`checkbox-personal-${p.id}`}
+                                                        type="checkbox"
+                                                        checked={p.id ? seleccionados.includes(p.id) : false}
+                                                        onChange={() => p.id && handleSeleccionarIndividual(p.id)}
+                                                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
                                                 <td className="px-5 py-3 text-gray-500 font-medium">
                                                     {(pagina - 1) * limite + index + 1}
                                                 </td>
