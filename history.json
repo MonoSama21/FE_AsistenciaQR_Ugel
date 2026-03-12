@@ -1,5 +1,25 @@
 [
   {
+    "id": "23005703518",
+    "runNumber": 31,
+    "tag": "@DailyTest",
+    "ambiente": "certificacion",
+    "date": "2026-03-12T14:04:07Z",
+    "dateFormatted": "12/03/2026 14:04",
+    "total": 7,
+    "passed": 1,
+    "failed": 6,
+    "skipped": 0,
+    "duration": 47.073,
+    "status": "passed",
+    "branch": "main",
+    "commit": "89a98fb5bc370be17bec5e8470dd01b9b643fe7b",
+    "commitShort": "89a98fb",
+    "actor": "MonoSama21",
+    "reportUrl": "https://MonoSama21.github.io/FE_AsistenciaQR_Ugel/reports/23005703518",
+    "actionsUrl": "https://github.com/MonoSama21/FE_AsistenciaQR_Ugel/actions/runs/23005703518"
+  },
+  {
     "id": "22956458931",
     "runNumber": 30,
     "tag": "@DailyTest",
