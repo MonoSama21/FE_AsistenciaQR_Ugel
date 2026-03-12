@@ -8,6 +8,7 @@ export class SidebarLocator {
         this.page = page;
     }
 
+    
     get welcomeTitle(){
         return this.page.locator("#welcome-title");
     }
