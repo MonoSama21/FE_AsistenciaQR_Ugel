@@ -118,4 +118,45 @@ export class SidebarPage {
         console.log('✅ Clic en el botón Cerrar Sesión del menú lateral.');
     }
 
+    async verifyOptionsSidebarAdmin(optionHome: string, optionUsers: string, optionStaff: string, optionAttendance: string, optionReportAttendance: string) {
+        const expectedOptions = [optionHome, optionUsers, optionStaff, optionAttendance, optionReportAttendance];
+        await expect(this.sidebarLocator.allMenuOptions).toHaveCount(expectedOptions.length);
+        const allOptionsTexts = await this.sidebarLocator.allMenuOptions.allTextContents();
+        
+        for (const optionText of expectedOptions) {
+            if (!allOptionsTexts.some(text => text.trim() === optionText)) {
+                throw new Error(`❌ Falta la opción "${optionText}" en el menú lateral."`);
+            }
+            console.log(`✅ Opción "${optionText}" encontrada en el menú lateral.`);
+        }
+
+        for (const text of allOptionsTexts) {
+            if (!expectedOptions.includes(text.trim())) {
+                throw new Error(`❌ Opción inesperada encontrada en el menú: "${text.trim()}"`);
+            }
+
+        }
+        console.log('✅ Opciones del menú lateral para administrador validadas correctamente.');
+    }
+
+    async verifyOptionsSidebarPersonal(optionHome: string, optionAttendance: string) {
+        const expectedOptions = [optionHome, optionAttendance];
+        await expect(this.sidebarLocator.allMenuOptions).toHaveCount(expectedOptions.length);
+        const allOptionsTexts = await this.sidebarLocator.allMenuOptions.allTextContents();
+
+        for (const optionText of expectedOptions) {
+            if (!allOptionsTexts.some(text => text.trim() === optionText)) {
+                throw new Error(`❌ Falta la opción "${optionText}" en el menú lateral."`);
+            }
+            console.log(`✅ Opción "${optionText}" encontrada en el menú lateral.`);
+        }
+
+        for (const text of allOptionsTexts) {
+            if (!expectedOptions.includes(text.trim())) {
+                throw new Error(`❌ Opción inesperada encontrada en el menú: "${text.trim()}"`);
+            }
+        }
+        console.log('✅ Opciones del menú lateral para personal validadas correctamente.');
+    }
+
 };

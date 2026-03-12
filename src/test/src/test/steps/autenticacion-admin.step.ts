@@ -3,6 +3,7 @@ import { test, expect } from '../utiles/test-fixtures';
 import { LoginPage } from '../pages/login.page';
 import { HomePage } from '../pages/home.page';
 import { error, log } from 'console';
+import { SidebarPage } from 'test/pages/sidebar.page';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -29,9 +30,16 @@ Given('estoy en la página de login del sistema SIAQR', async ({ page }) => {
 
 When('ingreso mi correo electrónico y contraseña válidos como administrador', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.fillEmail('pruebaqa@gmail.com');
+    await loginPage.fillEmail('admin@gmail.com');
     await loginPage.fillPassword('123456');
 });
+
+When('ingreso mi correo electrónico y contraseña válidos como personal', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.fillEmail('personal@gmail.com');
+    await loginPage.fillPassword('123456');
+});
+
 
 When('hago clic en el botón Inciar Sesion', async ({ page }) => {
     const loginPage = new LoginPage(page);
@@ -48,8 +56,14 @@ Then('ingreso al sistema y se ve mensaje de bienvenida personalizado', async ({ 
 
 When('ingreso mi correo electrónico válido como administrador', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.fillEmail('pruebaqa@gmail.com');
+    await loginPage.fillEmail('admin@gmail.com');
 });
+
+When('ingreso mi correo electrónico válido como personal', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.fillEmail('personal@gmail.com');
+});
+
 
 When('ingreso una contraseña incorrecta', async ({ page }) => {
     const loginPage = new LoginPage(page);
@@ -70,4 +84,18 @@ When('ingreso un correo electrónico inválido', async ({page}) => {
 When('ingreso una contraseña válida', async ({page}) => {
     const loginPage = new LoginPage(page);
     await loginPage.fillPassword('123456');
+});
+
+
+
+
+
+Then('en el sidebar se muestran las opciones de {string}, {string}, {string}, {string} y {string}', async ({page}, optionHome: string, optionUsers: string, optionStaff: string, optionAttendance: string, optionReportAttendance: string) => {
+    const sidebarPage = new SidebarPage(page);
+    await sidebarPage.verifyOptionsSidebarAdmin(optionHome, optionUsers, optionStaff, optionAttendance, optionReportAttendance);
+});
+
+Then('en el sidebar se muestran las opciones de {string} y {string}', async ({page}, optionHome: string, optionAttendance: string) => {
+    const sidebarPage = new SidebarPage(page);
+    await sidebarPage.verifyOptionsSidebarPersonal(optionHome, optionAttendance);
 });

@@ -10,7 +10,7 @@ const { Given, When, Then } = createBdd(test);
 
 Given('ingreso credeciales de administrador en el sistema SIAQR', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    await loginPage.fillEmail('pruebaqa@gmail.com');
+    await loginPage.fillEmail('admin@gmail.com');
     await loginPage.fillPassword('123456');
     await loginPage.clickLoginButton();
 });
