@@ -17,7 +17,7 @@ Feature: Gestión de Usuarios Administrativos
             | columna     |
             | Usuario     |
             | Rol         |
-            | Empleado    |
+            | Correo      |
             | Estado      |
             | Acción      |
 
