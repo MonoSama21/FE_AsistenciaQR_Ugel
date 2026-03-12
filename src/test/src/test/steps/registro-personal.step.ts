@@ -13,18 +13,64 @@ Then('hago clic en el botón Nuevo Registro', async ({ page }) => {
     await personalPage.clickBtnNewRegister();
 });
 
-
-When('ingreso un DNI con formato inválido {string}', async ({}, arg: string) => {
-  // Step: And ingreso un DNI con formato inválido "123ABC78"
-  // From: src\resources\features\personal\registro-personal.feature:56:9
+When('completo el formulario con DNI, Nombres, Apellidos y Cargo válidos', async ({page}) => {
+  const personalPage = new PersonalPage(page);
+  await personalPage.fillNewPersonalForm();
 });
 
-When('hago clic en Registrar', async ({}) => {
-  // Step: And hago clic en Registrar
-  // From: src\resources\features\personal\registro-personal.feature:57:9
+When('hago clic en Registrar', async ({page}) => {
+  const personalPage = new PersonalPage(page);
+  await personalPage.clickBtnCreatePersonal();
+});
+
+Then('el nuevo personal debe aparecer en el listado', async ({}) => {
+  // Step: And el nuevo personal debe aparecer en el listado
+  // From: src\resources\features\personal\registro-personal.feature:19:9
+});
+
+Then('el personal debe tener estado un QR', async ({}) => {
+  // Step: And el personal debe tener estado un QR
+  // From: src\resources\features\personal\registro-personal.feature:20:9
+});
+
+
+Then('se debe ver un mensaje de confirmación {string}', async ({page}, mensajeExitoso: string) => {
+    const personalPage = new PersonalPage(page);
+    await personalPage.verifySuccessMessagePersonal(mensajeExitoso);
+});
+
+
+When('observo un registro de empleado sin fotografía', async ({}) => {
+  // Step: When observo un registro de empleado sin fotografía
+  // From: src\resources\features\personal\registro-personal.feature:24:9
+});
+
+When('hago clic en el botón Foto', async ({}) => {
+  // Step: And hago clic en el botón Foto
+  // From: src\resources\features\personal\registro-personal.feature:25:9
+});
+
+When('selecciono una imagen válida JPG, PNG', async ({}) => {
+  // Step: And selecciono una imagen válida (JPG, PNG)
+  // From: src\resources\features\personal\registro-personal.feature:26:9
+});
+
+When('la imagen debe mostrarse como vista previa', async ({}) => {
+  // Step: And la imagen debe mostrarse como vista previa
+  // From: src\resources\features\personal\registro-personal.feature:27:9
+});
+
+When('hago clic en Subir Foto', async ({}) => {
+  // Step: And hago clic en Subir Foto
+  // From: src\resources\features\personal\registro-personal.feature:28:9
 });
 
 Then('debo ver un mensaje {string}', async ({}, arg: string) => {
-  // Step: Then debo ver un mensaje "DNI debe contener 8 dígitos"
-  // From: src\resources\features\personal\registro-personal.feature:58:9
+  // Step: Then debo ver un mensaje "Foto subida correctamente"
+  // From: src\resources\features\personal\registro-personal.feature:29:9
+});
+
+Then('la imagen debe guardarse correctamente con el registro', async ({}) => {
+  // Step: And la imagen debe guardarse correctamente con el registro
+  // From: src\resources\features\personal\registro-personal.feature:30:9
 });

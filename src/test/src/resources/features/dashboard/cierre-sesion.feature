@@ -1,18 +1,25 @@
 @test @sesion @logout @HU-011 @DailyTest @REQ-F-011 @SIAQR
 Feature: Cierre de Sesión
-    Como administrador de UGEL Chincha
+    Como administrador y personal de UGEL Chincha
     Quiero cerrar sesión de forma segura
     Para proteger el acceso al sistema cuando termine de usarlo
 
     Background:
         Given estoy en la página de login del sistema SIAQR
-        And ingreso credeciales de administrador en el sistema SIAQR
-        And ingreso al sistema y se ve mensaje de bienvenida personalizado
+        
 
-    @CP-016 @smoke @critical @security @happy-path @Escenario16 @ugel8
-    Scenario: CP-016 Cierre de sesión exitoso desde el menú lateral
-        When hago clic en el botón Cerrar Sesión ubicado en el menú lateral
+    @CP-016 @smoke @critical @security @happy-path @Escenario07
+    Scenario Outline: CP-016 Cierre de sesión exitoso desde el menú lateral
+        When ingreso mi correo electrónico y contraseña válidos como <rol>
+        And hago clic en el botón Inciar Sesion
+        And ingreso al sistema y se ve mensaje de bienvenida personalizado
+        And hago clic en el botón Cerrar Sesión ubicado en el menú lateral
         Then soy redirigido automáticamente a la pantalla de login
+        Examples:
+        | rol           |
+        | administrador |
+        | personal      |
+
 
     #@CP-017 @regression @security @critical @Escenario17
     #Scenario: CP-017 Prevención de acceso al dashboard sin autenticación tras cerrar sesión
