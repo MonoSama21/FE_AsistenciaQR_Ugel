@@ -18,7 +18,7 @@ const Header: React.FC = () => {
 
             {/* Mobile - logo/nombre del sistema */}
             <div className="flex md:hidden items-center gap-2">
-                <img src="../public/logoGP.png" alt="Logo" className="w-8 h-8 object-contain" />
+                <img src="https://res.cloudinary.com/dvrsdqsl1/image/upload/v1772813164/logoGP_c0bsos.png" alt="Logo" className="w-8 h-8 object-contain" />
                 <span className="text-blue-900 font-bold text-sm">SIAQR UGEL</span>
             </div>
 
