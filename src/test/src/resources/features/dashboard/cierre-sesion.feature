@@ -9,7 +9,7 @@ Feature: Cierre de Sesión
         
 
     @CP-016 @smoke @critical @security @happy-path @Escenario07
-    Scenario Outline: CP-016 Cierre de sesión exitoso desde el menú lateral
+    Scenario Outline: CP-016 Cierre de sesión exitoso desde el menú lateral para rol <rol>
         When ingreso mi correo electrónico y contraseña válidos como <rol>
         And hago clic en el botón Inciar Sesion
         And ingreso al sistema y se ve mensaje de bienvenida personalizado
