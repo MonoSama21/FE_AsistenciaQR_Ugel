@@ -14,15 +14,44 @@ interface Cargo {
     updatedat: string;
 }
 
+interface Distrito {
+    id: number;
+    alias: string;
+    distrito: string;
+    estado: boolean;
+    createdat: string;
+    updatedat: string;
+}
+
+interface InstitucionEducativa {
+    id: number;
+    codigoModular: string;
+    nombreIE: string;
+    nivelModalidad: string;
+    distritoId?: number;
+    distrito?: Distrito;
+}
+
+interface DistritoSimple {
+    id: number;
+    distrito: string;
+    alias: string;
+}
+
 interface Personal {
     id?: number;
     dni?: string;
     nombres?: string;
     apellidos?: string;
     cargoId?: number;
+    distritoId?: number;
+    nivelModalidad?: string;
+    institucionEducativaId?: number;
     codigoQR?: string;
     estado?: boolean;
     cargo?: Cargo;
+    distrito?: DistritoSimple;
+    institucionEducativa?: InstitucionEducativa;
     foto?: string;
 }
 
@@ -40,7 +69,15 @@ const Personal = () => {
 
     // Modal nuevo personal
     const [modalOpen, setModalOpen] = useState(false);
-    const [form, setForm] = useState({ dni: '', nombres: '', apellidos: '', cargoId: '' });
+    const [form, setForm] = useState({ 
+        dni: '', 
+        nombres: '', 
+        apellidos: '', 
+        cargoId: '', 
+        distritoId: '',
+        nivelModalidad: '',
+        institucionEducativaId: ''
+    });
     const [loadingCrear, setLoadingCrear] = useState(false);
     const [errorCrear, setErrorCrear] = useState<string | null>(null);
     const [successCrear, setSuccessCrear] = useState<string | null>(null);
@@ -51,6 +88,25 @@ const Personal = () => {
     const [buscarCargo, setBuscarCargo] = useState('');
     const [mostrarDropdownCargo, setMostrarDropdownCargo] = useState(false);
     const [cargoSeleccionado, setCargoSeleccionado] = useState<Cargo | null>(null);
+
+    // Distritos disponibles
+    const [distritos, setDistritos] = useState<Distrito[]>([]);
+    const [loadingDistritos, setLoadingDistritos] = useState(false);
+    const [buscarDistrito, setBuscarDistrito] = useState('');
+    const [mostrarDropdownDistrito, setMostrarDropdownDistrito] = useState(false);
+    const [distritoSeleccionado, setDistritoSeleccionado] = useState<Distrito | null>(null);
+
+    // Instituciones educativas disponibles
+    const [instituciones, setInstituciones] = useState<InstitucionEducativa[]>([]);
+    const [loadingInstituciones, setLoadingInstituciones] = useState(false);
+    const [buscarInstitucion, setBuscarInstitucion] = useState('');
+    const [mostrarDropdownInstitucion, setMostrarDropdownInstitucion] = useState(false);
+    const [institucionSeleccionada, setInstitucionSeleccionada] = useState<InstitucionEducativa | null>(null);
+
+    // Distrito precargado desde institución
+    const [distritoPrecargado, setDistritoPrecargado] = useState<Distrito | null>(null);
+
+    const nivelModalidadOpciones = ['INICIAL-JARDIN', 'PRIMARIA', 'SECUNDARIA', 'EBA-CEPTPRO'];
 
     // Modal subir foto
     const [modalFoto, setModalFoto] = useState(false);
@@ -69,6 +125,12 @@ const Personal = () => {
     const [descargandoPDF, setDescargandoPDF] = useState(false);
     const [generandoMasivo, setGenerandoMasivo] = useState(false);
     const [progresoMasivo, setProgresoMasivo] = useState({ actual: 0, total: 0 });
+
+    // Modal ver detalles
+    const [modalVer, setModalVer] = useState(false);
+    const [personalDetalles, setPersonalDetalles] = useState<Personal | null>(null);
+    const [loadingDetalles, setLoadingDetalles] = useState(false);
+    const [errorDetalles, setErrorDetalles] = useState<string | null>(null);
     const carneRef = useRef<HTMLDivElement>(null);
 
     // Selección múltiple para descarga masiva
@@ -79,20 +141,26 @@ const Personal = () => {
         obtenerPersonal(pagina, limite);
     }, [pagina, limite]);
 
-    // Cerrar dropdown al hacer clic fuera
+    // Cerrar dropdowns al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
             if (!target.closest('.dropdown-cargo-container')) {
                 setMostrarDropdownCargo(false);
             }
+            if (!target.closest('.dropdown-distrito-container')) {
+                setMostrarDropdownDistrito(false);
+            }
+            if (!target.closest('.dropdown-institucion-container')) {
+                setMostrarDropdownInstitucion(false);
+            }
         };
         
-        if (mostrarDropdownCargo) {
+        if (mostrarDropdownCargo || mostrarDropdownDistrito || mostrarDropdownInstitucion) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
-    }, [mostrarDropdownCargo]);
+    }, [mostrarDropdownCargo, mostrarDropdownDistrito, mostrarDropdownInstitucion]);
 
     const obtenerPersonal = async (pag: number, lim: number) => {
         setLoading(true);
@@ -133,14 +201,56 @@ const Personal = () => {
         }
     };
 
+    const obtenerDistritos = async () => {
+        setLoadingDistritos(true);
+        try {
+            const response = await axios.get(`${URL_API}/distritos?estado=true`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = response.data?.distritos || response.data || [];
+            setDistritos(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error al obtener distritos:', error);
+        } finally {
+            setLoadingDistritos(false);
+        }
+    };
+
+    const obtenerInstitucionesEducativas = async (nivelModalidad: string) => {
+        if (!nivelModalidad) {
+            setInstituciones([]);
+            return;
+        }
+        setLoadingInstituciones(true);
+        try {
+            const response = await axios.get(`${URL_API}/institucioneseducativas?nivelModalidad=${nivelModalidad}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = response.data?.instituciones || response.data || [];
+            setInstituciones(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error al obtener instituciones educativas:', error);
+            setInstituciones([]);
+        } finally {
+            setLoadingInstituciones(false);
+        }
+    };
+
     const abrirModal = () => {
-        setForm({ dni: '', nombres: '', apellidos: '', cargoId: '' });
+        setForm({ dni: '', nombres: '', apellidos: '', cargoId: '', distritoId: '', nivelModalidad: '', institucionEducativaId: '' });
         setErrorCrear(null);
         setSuccessCrear(null);
         setBuscarCargo('');
         setCargoSeleccionado(null);
+        setBuscarDistrito('');
+        setDistritoSeleccionado(null);
+        setBuscarInstitucion('');
+        setInstitucionSeleccionada(null);
+        setInstituciones([]);
+        setDistritoPrecargado(null);
         setModalOpen(true);
         obtenerCargos();
+        obtenerDistritos();
     };
 
     const seleccionarCargo = (cargo: Cargo) => {
@@ -150,8 +260,55 @@ const Personal = () => {
         setMostrarDropdownCargo(false);
     };
 
+    const seleccionarDistrito = (distrito: Distrito) => {
+        setDistritoSeleccionado(distrito);
+        setForm({ ...form, distritoId: distrito.id.toString() });
+        setBuscarDistrito(distrito.alias);
+        setMostrarDropdownDistrito(false);
+    };
+
+    const seleccionarNivelModalidad = (nivel: string) => {
+        setForm({ ...form, nivelModalidad: nivel, institucionEducativaId: '', distritoId: '' });
+        setInstitucionSeleccionada(null);
+        setDistritoPrecargado(null);
+        setBuscarInstitucion('');
+        setBuscarDistrito('');
+        setDistritoSeleccionado(null);
+        setMostrarDropdownInstitucion(false);
+        obtenerInstitucionesEducativas(nivel);
+    };
+
+    const seleccionarInstitucion = (institucion: InstitucionEducativa) => {
+        setInstitucionSeleccionada(institucion);
+        setForm({ ...form, institucionEducativaId: institucion.id.toString(), distritoId: '' });
+        setBuscarInstitucion(institucion.nombreIE);
+        setMostrarDropdownInstitucion(false);
+        
+        // Precargar el distrito de la institución usando distritoId
+        if (institucion.distrito) {
+            // Si viene el objeto distrito completo en la respuesta
+            setDistritoPrecargado(institucion.distrito);
+            setForm(prev => ({ ...prev, distritoId: institucion.distrito!.id.toString() }));
+            setDistritoSeleccionado(institucion.distrito);
+            setBuscarDistrito(institucion.distrito.alias);
+        } else if (institucion.distritoId) {
+            // Si no viene, buscar en la lista local usando distritoId
+            const distritoEncontrado = distritos.find(d => d.id === institucion.distritoId);
+            if (distritoEncontrado) {
+                setDistritoPrecargado(distritoEncontrado);
+                setForm(prev => ({ ...prev, distritoId: distritoEncontrado.id.toString() }));
+                setDistritoSeleccionado(distritoEncontrado);
+                setBuscarDistrito(distritoEncontrado.alias);
+            }
+        }
+    };
+
     const cargosFiltrados = cargos.filter(c =>
         c.cargo.toLowerCase().includes(buscarCargo.toLowerCase())
+    );
+
+    const distritosFiltrados = distritos.filter(d =>
+        d.alias.toLowerCase().includes(buscarDistrito.toLowerCase())
     );
 
     const crearPersonal = async (e: React.FormEvent) => {
@@ -160,7 +317,25 @@ const Personal = () => {
         setErrorCrear(null);
         setSuccessCrear(null);
         try {
-            await axios.post(`${URL_API}/personal`, form, {
+            const personalData: any = {
+                dni: form.dni,
+                nombres: form.nombres,
+                apellidos: form.apellidos,
+                cargoId: parseInt(form.cargoId)
+            };
+
+            // Agregar campos opcionales si están completados
+            if (form.distritoId) {
+                personalData.distritoId = parseInt(form.distritoId);
+            }
+            if (form.nivelModalidad) {
+                personalData.nivelModalidad = form.nivelModalidad;
+            }
+            if (form.institucionEducativaId) {
+                personalData.institucionEducativaId = parseInt(form.institucionEducativaId);
+            }
+
+            await axios.post(`${URL_API}/personal`, personalData, {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             setSuccessCrear('Personal registrado correctamente.');
@@ -238,6 +413,28 @@ const Personal = () => {
             setErrorFoto(error.response?.data?.message || 'Error al subir la foto');
         } finally {
             setLoadingFoto(false);
+        }
+    };
+
+    const abrirModalDetalles = async (p: Personal) => {
+        if (!p.id) return;
+
+        setModalVer(true);
+        setLoadingDetalles(true);
+        setErrorDetalles(null);
+        setPersonalDetalles(null);
+
+        try {
+            const response = await axios.get(`${URL_API}/personal/${p.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = response.data?.personal || response.data;
+            setPersonalDetalles(data);
+        } catch (error: any) {
+            console.error('Error al obtener detalles del personal:', error);
+            setErrorDetalles(error.response?.data?.message || 'Error al cargar los detalles del personal.');
+        } finally {
+            setLoadingDetalles(false);
         }
     };
 
@@ -332,6 +529,9 @@ const Personal = () => {
                     : `<div style="width:130px;height:130px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;"><span style="font-size:12px;color:#9ca3af;">Sin QR</span></div>`
                 }
             </div>
+            <div style="position:absolute;bottom:30px;left:10px;z-index:20;">
+                <span style="color:#374151;font-weight:700;font-size:10px;font-family:Arial,sans-serif;">DISTRITO: ${p.distrito?.alias || ''}</span>
+            </div>
             <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(to right,#1e3a8a,#1d4ed8);"></div>
         `;
         return el;
@@ -360,26 +560,34 @@ const Personal = () => {
             setProgresoMasivo({ actual: 0, total: todosPersonal.length });
 
             // A4 portrait: 210 x 297 mm
-            // Layout: 2 columnas × 2 filas = 4 carnés por página
+            // Layout: 3 columnas × 3 filas = 9 carnés por página
             const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const margin  = 10;   // mm
-            const gap     = 10;   // mm entre carnés
-            const cardW   = (210 - 2 * margin - gap) / 2;   // ≈ 90 mm
-            const cardH   = (297 - 2 * margin - gap) / 2;   // ≈ 133.5 mm
+            const margin  = 8;    // mm
+            const gap     = 6;    // mm entre carnés
+            const cardW   = (210 - 2 * margin - 2 * gap) / 3;   // ≈ 62 mm
+            const cardH   = (297 - 2 * margin - 2 * gap) / 3;   // ≈ 91 mm
             const positions = [
-                { x: margin,          y: margin },
-                { x: margin + cardW + gap, y: margin },
-                { x: margin,          y: margin + cardH + gap },
-                { x: margin + cardW + gap, y: margin + cardH + gap },
+                // Fila 1
+                { x: margin,                  y: margin },
+                { x: margin + cardW + gap,    y: margin },
+                { x: margin + 2 * cardW + 2 * gap, y: margin },
+                // Fila 2
+                { x: margin,                  y: margin + cardH + gap },
+                { x: margin + cardW + gap,    y: margin + cardH + gap },
+                { x: margin + 2 * cardW + 2 * gap, y: margin + cardH + gap },
+                // Fila 3
+                { x: margin,                  y: margin + 2 * cardH + 2 * gap },
+                { x: margin + cardW + gap,    y: margin + 2 * cardH + 2 * gap },
+                { x: margin + 2 * cardW + 2 * gap, y: margin + 2 * cardH + 2 * gap },
             ];
 
             let isFirstPage = true;
 
-            for (let i = 0; i < todosPersonal.length; i += 4) {
+            for (let i = 0; i < todosPersonal.length; i += 9) {
                 if (!isFirstPage) pdfDoc.addPage();
                 isFirstPage = false;
 
-                const batch = todosPersonal.slice(i, i + 4);
+                const batch = todosPersonal.slice(i, i + 9);
 
                 for (let j = 0; j < batch.length; j++) {
                     const p   = batch[j];
@@ -744,6 +952,9 @@ const Personal = () => {
                                                 </td>
                                                 <td className="px-5 py-3">
                                                     <div className="flex items-center gap-1.5">
+                                                        <button onClick={() => abrirModalDetalles(p)} className="px-3 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 font-semibold text-xs transition-colors border border-green-200">
+                                                            Ver
+                                                        </button>
                                                         <button onClick={() => abrirModalCarne(p)} className="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition-colors border border-indigo-200">
                                                             Carné
                                                         </button>
@@ -885,6 +1096,171 @@ const Personal = () => {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Divisor y Encabezado de Campos Opcionales */}
+                                <div className="col-span-2 pt-2 pb-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
+                                        <div className="flex items-center gap-2">
+                                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Información Adicional</span>
+                                            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Opcional</span>
+                                        </div>
+                                        <div className="flex-1 h-px bg-gradient-to-l from-blue-200 to-transparent"></div>
+                                    </div>
+                                </div>
+
+                                {/* Nivel Modalidad (Opcional) */}
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                        Nivel de Modalidad <span className="text-gray-400 text-xs">(Opcional)</span>
+                                    </label>
+                                    <select 
+                                        value={form.nivelModalidad} 
+                                        onChange={e => seleccionarNivelModalidad(e.target.value)}
+                                        className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none transition-all"
+                                    >
+                                        <option value="">-- Seleccionar Nivel --</option>
+                                        {nivelModalidadOpciones.map(nivel => (
+                                            <option key={nivel} value={nivel}>{nivel}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Institución Educativa (Opcional) */}
+                                <div className="col-span-2 relative">
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                        Institución Educativa <span className="text-gray-400 text-xs">(Opcional)</span>
+                                    </label>
+                                    <div className="relative dropdown-institucion-container">
+                                        <input 
+                                            id="input-buscar-institucion"
+                                            type="text" 
+                                            value={buscarInstitucion} 
+                                            onChange={e => {
+                                                if (form.nivelModalidad) {
+                                                    setBuscarInstitucion(e.target.value);
+                                                    setMostrarDropdownInstitucion(true);
+                                                    if (e.target.value === '') {
+                                                        setInstitucionSeleccionada(null);
+                                                        setForm({ ...form, institucionEducativaId: '', distritoId: '' });
+                                                        setDistritoPrecargado(null);
+                                                        setBuscarDistrito('');
+                                                        setDistritoSeleccionado(null);
+                                                    }
+                                                }
+                                            }}
+                                            onFocus={() => form.nivelModalidad && setMostrarDropdownInstitucion(true)}
+                                            disabled={!form.nivelModalidad}
+                                            className={`w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-all ${!form.nivelModalidad ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white'}`}
+                                            placeholder="Selecciona un nivel primero..."
+                                        />
+                                        <svg className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        
+                                        {/* Dropdown de instituciones */}
+                                        {mostrarDropdownInstitucion && form.nivelModalidad && (
+                                            <div className="absolute z-[60] w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                                {loadingInstituciones ? (
+                                                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                                                        <svg className="w-4 h-4 animate-spin inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                                        </svg>
+                                                        Cargando instituciones...
+                                                    </div>
+                                                ) : instituciones.length === 0 ? (
+                                                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                                                        No se encontraron instituciones para este nivel
+                                                    </div>
+                                                ) : (
+                                                    instituciones.filter(i => 
+                                                        i.nombreIE.toLowerCase().includes(buscarInstitucion.toLowerCase()) ||
+                                                        i.codigoModular.includes(buscarInstitucion)
+                                                    ).map(institucion => (
+                                                        <div
+                                                            key={institucion.id}
+                                                            onClick={() => seleccionarInstitucion(institucion)}
+                                                            className={`px-3 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors ${
+                                                                institucionSeleccionada?.id === institucion.id ? 'bg-blue-100' : ''
+                                                            }`}
+                                                        >
+                                                            <div className="text-sm font-semibold text-gray-800">{institucion.nombreIE}</div>
+                                                            <div className="text-xs text-gray-500">{institucion.codigoModular}</div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Distrito (Precargado desde Institución) */}
+                                <div className="col-span-2 relative">
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                        Distrito {!distritoPrecargado && <span className="text-gray-400 text-xs">(Se precarga automáticamente)</span>}
+                                    </label>
+                                    <div className="relative dropdown-distrito-container">
+                                        <input 
+                                            id="input-buscar-distrito"
+                                            data-testid="input-buscar-distrito"
+                                            type="text" 
+                                            value={buscarDistrito} 
+                                            onChange={e => {
+                                                if (!distritoPrecargado) {
+                                                    setBuscarDistrito(e.target.value);
+                                                    setMostrarDropdownDistrito(true);
+                                                    if (e.target.value === '') {
+                                                        setDistritoSeleccionado(null);
+                                                        setForm({ ...form, distritoId: '' });
+                                                    }
+                                                }
+                                            }}
+                                            onFocus={() => !distritoPrecargado && setMostrarDropdownDistrito(true)}
+                                            disabled={!!distritoPrecargado || !institucionSeleccionada}
+                                            className={`w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-all ${distritoPrecargado || !institucionSeleccionada ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white'}`}
+                                            placeholder="Buscar distrito..."
+                                        />
+                                        <svg className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        
+                                        {/* Dropdown de distritos */}
+                                        {mostrarDropdownDistrito && (
+                                            <div className="absolute z-[60] w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                                {loadingDistritos ? (
+                                                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                                                        <svg className="w-4 h-4 animate-spin inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                                        </svg>
+                                                        Cargando distritos...
+                                                    </div>
+                                                ) : distritosFiltrados.length === 0 ? (
+                                                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                                                        No se encontraron distritos
+                                                    </div>
+                                                ) : (
+                                                    distritosFiltrados.map(distrito => (
+                                                        <div
+                                                            key={distrito.id}
+                                                            onClick={() => seleccionarDistrito(distrito)}
+                                                            className={`px-3 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors ${
+                                                                distritoSeleccionado?.id === distrito.id ? 'bg-blue-100' : ''
+                                                            }`}
+                                                        >
+                                                            <div className="text-sm font-semibold text-gray-800">{distrito.alias}</div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                             </div>
 
                             {successCrear && <div id="msg-success-crear" data-testid="msg-success-crear" className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-xl text-xs">{successCrear}</div>}
@@ -901,6 +1277,148 @@ const Personal = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Ver Detalles */}
+            {modalVer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50" onClick={() => setModalVer(false)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-900 to-blue-600 px-6 py-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-white font-extrabold text-base">Detalles de Personal</h2>
+                                    <p className="text-blue-200 text-xs">Información completa del empleado</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setModalVer(false)} className="text-white/70 hover:text-white transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Contenido */}
+                        <div className="p-6 flex flex-col gap-4">
+                            {loadingDetalles ? (
+                                <div className="flex flex-col items-center gap-3 py-12">
+                                    <svg className="w-12 h-12 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                    </svg>
+                                    <p className="text-gray-500 text-sm">Cargando información...</p>
+                                </div>
+                            ) : errorDetalles ? (
+                                <div id="msg-error-detalles" data-testid="msg-error-detalles" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+                                    {errorDetalles}
+                                </div>
+                            ) : personalDetalles ? (
+                                <>
+                                    {/* Foto */}
+                                    <div className="flex justify-center">
+                                        {personalDetalles.foto ? (
+                                            <img
+                                                src={personalDetalles.foto}
+                                                alt="Foto"
+                                                className="w-24 h-24 object-cover rounded-full border-4 border-blue-200"
+                                            />
+                                        ) : (
+                                            <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-200">
+                                                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Detalles */}
+                                    <div className="space-y-3">
+                                        <div className="border-b border-gray-200 pb-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase">Nombre Completo</p>
+                                            <p className="text-sm font-bold text-gray-800">{personalDetalles.nombres} {personalDetalles.apellidos}</p>
+                                        </div>
+
+                                        <div className="border-b border-gray-200 pb-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase">DNI</p>
+                                            <p className="text-sm font-semibold text-gray-800 font-mono">{personalDetalles.dni}</p>
+                                        </div>
+
+                                        <div className="border-b border-gray-200 pb-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase">Cargo</p>
+                                            <p className="text-sm font-semibold text-gray-800">{personalDetalles.cargo?.cargo || 'Sin cargo'}</p>
+                                            {personalDetalles.cargo?.descripcion && (
+                                                <p className="text-xs text-gray-600 mt-1 italic">{personalDetalles.cargo.descripcion}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="border-b border-gray-200 pb-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase">Distrito</p>
+                                            <p className="text-sm font-semibold text-gray-800">{personalDetalles.distrito?.distrito || 'Sin distrito'}</p>
+                                            {personalDetalles.distrito?.alias && (
+                                                <p className="text-xs text-gray-600 mt-1">Alias: <span className="font-semibold">{personalDetalles.distrito.alias}</span></p>
+                                            )}
+                                        </div>
+
+                                        <div className="border-b border-gray-200 pb-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase">Estado</p>
+                                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                                personalDetalles.estado 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {personalDetalles.estado ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                        </div>
+
+                                        {personalDetalles.nivelModalidad && (
+                                            <div className="border-b border-gray-200 pb-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase">Nivel de Modalidad</p>
+                                                <p className="text-sm font-semibold text-gray-800">{personalDetalles.nivelModalidad}</p>
+                                            </div>
+                                        )}
+
+                                        {personalDetalles.institucionEducativa && (
+                                            <div className="border-b border-gray-200 pb-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase">Institución Educativa</p>
+                                                <p className="text-sm font-semibold text-gray-800">{personalDetalles.institucionEducativa.nombreIE}</p>
+                                                <p className="text-xs text-gray-600 mt-1">Código Modular: <span className="font-mono font-semibold">{personalDetalles.institucionEducativa.codigoModular}</span></p>
+                                            </div>
+                                        )}
+
+                                        {personalDetalles.codigoQR && (
+                                            <div className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                                                <p className="text-xs font-semibold text-gray-600">Código QR</p>
+                                                <img
+                                                    src={personalDetalles.codigoQR}
+                                                    alt="QR"
+                                                    className="w-32 h-32 object-contain"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : null}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+                            <button
+                                id="btn-cerrar-detalles"
+                                data-testid="btn-close-detalles"
+                                onClick={() => setModalVer(false)}
+                                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all text-sm"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1081,7 +1599,7 @@ const Personal = () => {
                                                 <img 
                                                     src="/logoGP.png" 
                                                     alt="Logo" 
-                                                    style={{ width: '64px', height: '64px', objectFit: 'contain', imageRendering: 'high-quality' }}
+                                                    style={{ width: '64px', height: '64px', objectFit: 'contain', imageRendering: 'crisp-edges' }}
                                                 />
                                             </div>
                                         </div>
@@ -1092,7 +1610,7 @@ const Personal = () => {
                                                 <img 
                                                     src={personalCarne.foto} 
                                                     alt="Foto" 
-                                                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%', border: '4px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', imageRendering: 'high-quality' }}
+                                                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%', border: '4px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', imageRendering: 'crisp-edges' }}
                                                 />
                                             ) : (
                                                 <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#e5e7eb', border: '4px solid #d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1120,12 +1638,15 @@ const Personal = () => {
                                             </p>
                                         </div>
 
+                                
                                         {/* DNI */}
                                         <div style={{ paddingLeft: '24px', paddingRight: '24px', marginBottom: '12px' }}>
                                             <p style={{ textAlign: 'center', color: '#374151', fontWeight: '600', fontSize: '12px', textRendering: 'geometricPrecision' }}>
                                                 DNI: <span style={{ fontWeight: '700' }}>{personalCarne.dni}</span>
                                             </p>
                                         </div>
+
+                                  
 
                                         {/* Código QR */}
                                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '50px' }}>
@@ -1142,6 +1663,14 @@ const Personal = () => {
                                                     <span style={{ fontSize: '12px', color: '#9ca3af' }}>Sin QR</span>
                                                 </div>
                                             )}
+                                        </div>
+
+                                        {/* ALIAS */}
+
+                                        <div style={{ position: 'absolute', bottom: '30px', left: '10px', zIndex: 20 }}>
+                                            <span style={{ color: '#374151', fontWeight: '700', fontSize: '10px', fontFamily: 'Arial,sans-serif' }}>
+                                                DISTRITO: {personalCarne.distrito?.alias || ''}
+                                            </span>
                                         </div>
 
                                         {/* Footer decorativo */}

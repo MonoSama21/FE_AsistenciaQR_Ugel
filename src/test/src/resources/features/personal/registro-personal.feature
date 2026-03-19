@@ -13,11 +13,11 @@ Feature: Registro de Personal
     @CP-042 @smoke @critical @happy-path @Escenario42
     Scenario: CP-042 Registro exitoso de empleado con todos los campos obligatorios
         When hago clic en el botón Nuevo Registro
-        And completo el formulario con DNI, Nombres, Apellidos y Cargo válidos
+        And completo el formulario con DNI, Nombres, Apellidos, Cargo y Distrito válidos
         And hago clic en Registrar
         Then se debe ver un mensaje de confirmación "Personal registrado correctamente."
         #And el nuevo personal debe aparecer en el listado
-        #And el personal debe tener estado un QR 
+        #And el personal debe tener estado un QR
 
     @CP-045 @regression @happy-path @Escenario45
     Scenario: CP-045 Subir fotografía del empleado desde archivo

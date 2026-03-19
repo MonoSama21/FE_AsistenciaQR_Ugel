@@ -13,7 +13,7 @@ Then('hago clic en el botón Nuevo Registro', async ({ page }) => {
     await personalPage.clickBtnNewRegister();
 });
 
-When('completo el formulario con DNI, Nombres, Apellidos y Cargo válidos', async ({page}) => {
+When('completo el formulario con DNI, Nombres, Apellidos, Cargo y Distrito válidos', async ({page}) => {
   const personalPage = new PersonalPage(page);
   await personalPage.fillNewPersonalForm();
 });

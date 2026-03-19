@@ -3,10 +3,25 @@ import Sidebar from "../sections/Sidebar";
 import Header from "../sections/Header";
 import axios from "axios";
 import jsPDF from "jspdf";
+import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import logoUgel from "../../assets/img/logo.jpeg";
 
 interface Cargo {
     cargo: string;
+}
+
+interface Distrito {
+    id: number;
+    distrito: string;
+    alias: string;
+}
+
+interface InstitucionEducativa {
+    id: number;
+    codigoModular: string;
+    nombreIE: string;
+    nivelModalidad: string;
 }
 
 interface PersonalResumen {
@@ -14,7 +29,10 @@ interface PersonalResumen {
     dni: string;
     nombres: string;
     apellidos: string;
+    nivelModalidad: string | null;
     cargo: Cargo;
+    distrito: Distrito | null;
+    institucionEducativa: InstitucionEducativa | null;
 }
 
 interface Asistencia {
@@ -27,6 +45,10 @@ interface Asistencia {
     horasTrabajadas: string | null;
     estado: string;
     createdat: string;
+    usuarioIdEntrada: number | null;
+    usuarioNombreEntrada: string | null;
+    usuarioIdSalida: number | null;
+    usuarioNombreSalida: string | null;
 }
 
 interface RespuestaReporte {
@@ -78,6 +100,8 @@ const ReporteAsistencia = () => {
 
     // PDF
     const [generandoPDF, setGenerandoPDF] = useState<boolean>(false);
+    // Excel
+    const [generandoExcel, setGenerandoExcel] = useState<boolean>(false);
 
     // ─── Inicializar con fecha de hoy ───────────────────────────────────────
     useEffect(() => {
@@ -149,6 +173,203 @@ const ReporteAsistencia = () => {
         return <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-yellow-100 text-yellow-700">EN CURSO</span>;
     };
 
+    // ─── Exportar a Excel (REQ-F-010) ──────────────────────────────────────────
+    const exportarExcel = async () => {
+        if (asistencias.length === 0) return;
+        setGenerandoExcel(true);
+
+        try {
+            // Obtener TODOS los registros para el Excel (sin límite de página)
+            const params: Record<string, string | number> = { pagina: 1, limite: 9999 };
+            if (fechaInicio) params['fechaInicio'] = fechaInicio;
+            if (fechaFin)    params['fechaFin']    = fechaFin;
+
+            const resp = await axios.get<RespuestaReporte>(`${URL_API}/asistencia/reporte`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params,
+            });
+            const todos = resp.data.asistencias || [];
+
+            // Crear workbook con ExcelJS
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Asistencia');
+
+            // Definir ancho de columnas
+            worksheet.columns = [
+                { header: '#', key: 'numero', width: 6 },
+                { header: 'DNI', key: 'dni', width: 16 },
+                { header: 'PERSONAL', key: 'personal', width: 32 },
+                { header: 'CARGO', key: 'cargo', width: 24 },
+                { header: 'NIVEL MODALIDAD', key: 'nivelModalidad', width: 18 },
+                { header: 'INSTITUCIÓN EDUCATIVA', key: 'institucion', width: 26 },
+                { header: 'DISTRITO', key: 'distrito', width: 14 },
+                { header: 'FECHA', key: 'fecha', width: 14 },
+                { header: 'ENTRADA', key: 'entrada', width: 14 },
+                { header: 'REGISTRADOR ENTRADA', key: 'usuarioEntrada', width: 22 },
+                { header: 'SALIDA', key: 'salida', width: 14 },
+                { header: 'REGISTRADOR SALIDA', key: 'usuarioSalida', width: 22 },
+                { header: 'HORAS TRAB.', key: 'horasTrab', width: 16 },
+                { header: 'ESTADO', key: 'estado', width: 14 },
+            ];
+
+            // ── Encabezado del reporte (fila 1) ──
+            const titleRow = worksheet.insertRow(1, ['REPORTE DE ASISTENCIA - UGEL CHINCHA']);
+            worksheet.mergeCells('A1:N1');
+            worksheet.getRow(1).height = 28;
+            
+            // Aplicar estilos solo a celdas A1:N1
+            for (let col = 1; col <= 14; col++) {
+                const cell = titleRow.getCell(col);
+                cell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3D5C8C' } };
+                cell.alignment = { horizontal: 'left', vertical: 'center' };
+                cell.border = {
+                    left: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    right: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    top: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    bottom: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                };
+            }
+
+            // ── Información del reporte ──
+            const periodoTexto = fechaInicio && fechaFin
+                ? `Período: ${formatearFecha(fechaInicio)} al ${formatearFecha(fechaFin)}`
+                : fechaInicio
+                    ? `Desde: ${formatearFecha(fechaInicio)}`
+                    : 'Todos los registros';
+
+            const infoRows = [
+                [periodoTexto],
+                [`Generado: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE')}`],
+                [`Total de registros: ${todos.length}`],
+            ];
+
+            infoRows.forEach((infoRow, idx) => {
+                const row = worksheet.insertRow(2 + idx, infoRow);
+                worksheet.mergeCells(`A${2 + idx}:N${2 + idx}`);
+                worksheet.getRow(2 + idx).height = 20;
+                
+                // Aplicar estilos solo a celdas A-N
+                for (let col = 1; col <= 14; col++) {
+                    const cell = row.getCell(col);
+                    cell.font = { bold: true, size: 10, color: { argb: 'FF333333' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0F8' } };
+                    cell.alignment = { horizontal: 'left', vertical: 'center' };
+                    cell.border = {
+                        left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                    };
+                }
+            });
+
+            // Fila vacía
+            worksheet.insertRow(5, []);
+
+            // ── Encabezados de tabla (fila 6) ──
+            const headerRowStart = 6;
+            const headerRowExcel = worksheet.getRow(headerRowStart);
+            headerRowExcel.height = 26;
+
+            // Aplicar estilos SOLO a celdas A-N del encabezado
+            for (let col = 1; col <= 14; col++) {
+                const cell = headerRowExcel.getCell(col);
+                cell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3D5C8C' } };
+                cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+                cell.border = {
+                    left: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    right: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    top: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                    bottom: { style: 'medium', color: { argb: 'FF003D5C8C' } },
+                };
+            }
+
+            // ── Datos del reporte ──
+            todos.forEach((a, idx) => {
+                const nombreCompleto = `${a.personal.nombres} ${a.personal.apellidos}`;
+                const horasTrab = a.horasTrabajadas || (a.horaSalida ? '-' : 'En curso');
+
+                const dataRow = worksheet.insertRow(headerRowStart + 1 + idx, [
+                    idx + 1,
+                    a.personal.dni,
+                    nombreCompleto,
+                    a.personal.cargo?.cargo || '-',
+                    a.personal.nivelModalidad || '-',
+                    a.personal.institucionEducativa?.nombreIE || '-',
+                    a.personal.distrito?.alias || '-',
+                    formatearFecha(a.fecha),
+                    formatearHora(a.horaEntrada),
+                    a.usuarioNombreEntrada || '-',
+                    formatearHora(a.horaSalida),
+                    a.usuarioNombreSalida || '-',
+                    horasTrab,
+                    a.estado,
+                ]);
+
+                // Colores alternos
+                const isEvenRow = idx % 2 === 0;
+                const bgColor = isEvenRow ? 'FFE8F0F8' : 'FFFFFFFF'; // Azul claro o blanco
+
+                dataRow.height = 20;
+
+                // Aplicar alineación y bordes SOLO a celdas A-N
+                for (let colIdx = 1; colIdx <= 14; colIdx++) {
+                    const cell = dataRow.getCell(colIdx);
+                    
+                    // Alineación
+                    if (colIdx === 1 || colIdx === 8 || colIdx === 9 || colIdx === 10 || colIdx === 11 || colIdx === 12 || colIdx === 13 || colIdx === 14) {
+                        cell.alignment = { horizontal: 'center', vertical: 'center' };
+                    } else {
+                        cell.alignment = { horizontal: 'left', vertical: 'center' };
+                    }
+
+                    // Estilos
+                    cell.font = { size: 10, color: { argb: 'FF000000' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+                    cell.border = {
+                        left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                        bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+                    };
+                }
+            });
+
+            // ── Pie de página ──
+            const footerRowIdx = headerRowStart + 1 + todos.length + 1;
+            const footerRow = worksheet.insertRow(footerRowIdx, ['Nota: Este documento fue generado automáticamente por el Sistema de Asistencia UGEL Chincha']);
+            worksheet.mergeCells(`A${footerRowIdx}:N${footerRowIdx}`);
+            worksheet.getRow(footerRowIdx).height = 18;
+            
+            // Aplicar estilos solo a celdas A-N del pie de página
+            for (let col = 1; col <= 14; col++) {
+                const cell = footerRow.getCell(col);
+                cell.font = { size: 9, italic: true, color: { argb: 'FF666666' } };
+                cell.alignment = { horizontal: 'left', vertical: 'center' };
+            }
+
+            // Congelar encabezados
+            worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: headerRowStart }];
+
+            // Generar archivo
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte-asistencia${fechaInicio ? `-${fechaInicio}` : ''}${fechaFin && fechaFin !== fechaInicio ? `-${fechaFin}` : ''}.xlsx`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Error al generar Excel:', err);
+            alert('Error al generar el archivo Excel');
+        } finally {
+            setGenerandoExcel(false);
+        }
+    };
+
     // ─── Exportar PDF (REQ-F-009) ────────────────────────────────────────────
     const exportarPDF = async () => {
         if (asistencias.length === 0) return;
@@ -213,8 +434,8 @@ const ReporteAsistencia = () => {
             doc.text(`Total de registros: ${todos.length}`, ancho - margen, 15, { align: 'right' });
 
             // ── Tabla ──
-            const cabeceras = ['#', 'DNI', 'PERSONAL', 'CARGO', 'FECHA', 'ENTRADA', 'SALIDA', 'HORAS TRAB.', 'ESTADO'];
-            const anchos    = [10, 22, 60, 55, 24, 22, 22, 24, 22];
+            const cabeceras = ['#', 'DNI', 'PERSONAL', 'CARGO', 'DISTRITO', 'FECHA', 'ENTRADA', 'SALIDA', 'HORAS TRAB.', 'ESTADO'];
+            const anchos    = [10, 22, 60, 45, 25, 24, 22, 22, 24, 22];
 
             let y = 42;
             const filaAltura = 8;
@@ -262,6 +483,7 @@ const ReporteAsistencia = () => {
                     (a.personal.cargo?.cargo || '-').length > 24
                         ? (a.personal.cargo?.cargo || '-').substring(0, 22) + '…'
                         : (a.personal.cargo?.cargo || '-'),
+                    a.personal.distrito?.alias || '-',
                     formatearFecha(a.fecha),
                     formatearHora(a.horaEntrada),
                     formatearHora(a.horaSalida),
@@ -320,22 +542,40 @@ const ReporteAsistencia = () => {
                             <p className="text-gray-400 text-xs mt-0.5">Consulta y exporta los registros de asistencia del personal</p>
                         </div>
                         {hasBuscado && asistencias.length > 0 && (
-                            <button
-                                onClick={exportarPDF}
-                                disabled={generandoPDF}
-                                className="flex items-center gap-2 bg-red-700 hover:bg-red-600 active:bg-red-800 disabled:bg-red-300 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-red-700/20 transition-all">
-                                {generandoPDF ? (
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                    </svg>
-                                )}
-                                {generandoPDF ? 'Generando PDF...' : 'Exportar PDF'}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={exportarExcel}
+                                    disabled={generandoExcel}
+                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-500 active:bg-green-700 disabled:bg-green-300 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-green-600/20 transition-all">
+                                    {generandoExcel ? (
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                        </svg>
+                                    )}
+                                    {generandoExcel ? 'Generando Excel...' : 'Exportar Excel'}
+                                </button>
+                                <button
+                                    onClick={exportarPDF}
+                                    disabled={generandoPDF}
+                                    className="flex items-center gap-2 bg-red-700 hover:bg-red-600 active:bg-red-800 disabled:bg-red-300 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-red-700/20 transition-all">
+                                    {generandoPDF ? (
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                        </svg>
+                                    )}
+                                    {generandoPDF ? 'Generando PDF...' : 'Exportar PDF'}
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -418,9 +658,14 @@ const ReporteAsistencia = () => {
                                         <th className="px-5 py-3 text-left font-semibold">DNI</th>
                                         <th className="px-5 py-3 text-left font-semibold">Personal</th>
                                         <th className="px-5 py-3 text-left font-semibold">Cargo</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Nivel Modalidad</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Institución Educativa</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Distrito</th>
                                         <th className="px-5 py-3 text-left font-semibold">Fecha</th>
                                         <th className="px-5 py-3 text-center font-semibold">Entrada</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Registrador Entrada</th>
                                         <th className="px-5 py-3 text-center font-semibold">Salida</th>
+                                        <th className="px-5 py-3 text-left font-semibold">Registrador Salida</th>
                                         <th className="px-5 py-3 text-center font-semibold">Horas Trab.</th>
                                         <th className="px-5 py-3 text-center font-semibold">Estado</th>
                                     </tr>
@@ -428,7 +673,7 @@ const ReporteAsistencia = () => {
                                 <tbody className="divide-y divide-gray-100">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={9} className="px-5 py-10 text-center text-gray-400 text-sm">
+                                            <td colSpan={14} className="px-5 py-10 text-center text-gray-400 text-sm">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <svg className="w-4 h-4 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -440,13 +685,13 @@ const ReporteAsistencia = () => {
                                         </tr>
                                     ) : !hasBuscado ? (
                                         <tr>
-                                            <td colSpan={9} className="px-5 py-10 text-center text-gray-400 text-sm">
+                                            <td colSpan={14} className="px-5 py-10 text-center text-gray-400 text-sm">
                                                 Selecciona un rango de fechas y presiona <span className="font-semibold text-blue-800">Buscar</span> para ver los registros.
                                             </td>
                                         </tr>
                                     ) : asistenciasFiltradas.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} className="px-5 py-10 text-center text-gray-400 text-sm">
+                                            <td colSpan={14} className="px-5 py-10 text-center text-gray-400 text-sm">
                                                 No se encontraron registros para el período seleccionado.
                                             </td>
                                         </tr>
@@ -465,6 +710,15 @@ const ReporteAsistencia = () => {
                                                 <td className="px-5 py-3 text-gray-500 text-xs">
                                                     {a.personal.cargo?.cargo || '-'}
                                                 </td>
+                                                <td className="px-5 py-3 text-gray-500 text-xs">
+                                                    {a.personal.nivelModalidad || '-'}
+                                                </td>
+                                                <td className="px-5 py-3 text-gray-500 text-xs">
+                                                    {a.personal.institucionEducativa?.nombreIE || '-'}
+                                                </td>
+                                                <td className="px-5 py-3 text-gray-500 text-xs">
+                                                    {a.personal.distrito?.alias || '-'}
+                                                </td>
                                                 <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
                                                     {formatearFecha(a.fecha)}
                                                 </td>
@@ -477,6 +731,9 @@ const ReporteAsistencia = () => {
                                                         <span className="text-gray-300">—</span>
                                                     )}
                                                 </td>
+                                                <td className="px-5 py-3 text-left">
+                                                    {a.usuarioNombreEntrada || '-'}
+                                                </td>
                                                 <td className="px-5 py-3 text-center">
                                                     {a.horaSalida ? (
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
@@ -485,6 +742,9 @@ const ReporteAsistencia = () => {
                                                     ) : (
                                                         <span className="text-gray-300">—</span>
                                                     )}
+                                                </td>
+                                                <td className="px-5 py-3 text-left">
+                                                    {a.usuarioNombreSalida || '-'}
                                                 </td>
                                                 <td className="px-5 py-3 text-center">
                                                     {a.horasTrabajadas ? (

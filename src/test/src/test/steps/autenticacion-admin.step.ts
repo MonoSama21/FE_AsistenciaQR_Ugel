@@ -3,7 +3,7 @@ import { test, expect } from '../utiles/test-fixtures';
 import { LoginPage } from '../pages/login.page';
 import { HomePage } from '../pages/home.page';
 import { error, log } from 'console';
-import { SidebarPage } from 'test/pages/sidebar.page';
+import { SidebarPage } from '../pages/sidebar.page';
 
 const { Given, When, Then } = createBdd(test);
 
