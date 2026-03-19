@@ -73,7 +73,7 @@ export class SidebarPage {
             case 'Asistencia':
                 optionLocator = this.sidebarLocator.optionAttendance;
                 break;
-            case 'Reportes de Asistencia':
+            case 'Reporte Asistencia':
                 optionLocator = this.sidebarLocator.optionReportAttendance;
                 break;
             default:
