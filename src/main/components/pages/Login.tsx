@@ -162,6 +162,13 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
             )}
           </form>
+
+          {/* Footer con crédito */}
+          <div className="mt-12 pt-6 border-t border-gray-200 text-center">
+            <p className="text-xs text-gray-400 font-light tracking-wide">
+              Sistema Web elaborado por <span className="font-semibold text-gray-500">DEVQORA </span> - <span className="font-semibold text-gray-500">Yrvin Pachas</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
