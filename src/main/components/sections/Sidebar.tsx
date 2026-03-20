@@ -21,6 +21,7 @@ interface SidebarOption {
 
 const Sidebar = () => {
     const [configuracion, setConfiguracion] = React.useState<Configuracion>({});
+    const [submenuAbierto, setSubmenuAbierto] = React.useState<string | null>(null);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -81,6 +82,19 @@ const Sidebar = () => {
                 </svg>
             )
         },
+        {
+            label: "Datos Maestros",
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6h13M9 10h6m-6 4h6m2 4h2a2 2 0 002-2V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            ),
+            subMenus: [
+                { to: "/dashboard/datos-maestros/cargos", label: "Cargos" },
+                { to: "/dashboard/datos-maestros/distritos", label: "Distritos" },
+                { to: "/dashboard/datos-maestros/instituciones", label: "Instituciones Educativas" }
+            ]
+        }
     ];
 
     // Filtrar opciones según el rol del usuario
@@ -117,31 +131,86 @@ const Sidebar = () => {
                 <ul className="space-y-1">
                     {opcionesVisibles.map((option, index) => {
                         const menuId = option.label.toLowerCase().replace(/\s+/g, '-');
+                        const isSubmenuOpen = submenuAbierto === menuId;
+                        const isActive = option.to && location.pathname === option.to;
+                        const hasSubmenu = option.subMenus && option.subMenus.length > 0;
+                        const isSubmenuActive = option.subMenus?.some(sub => location.pathname === sub.to);
+
                         return (
                             <li key={index}>
-                                <Link
-                                    to={option.to!}
-                                    id={`menu-${menuId}`}
-                                    data-testid={`menu-${menuId}`}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
-                                        location.pathname === option.to
-                                            ? 'bg-white text-blue-900 shadow-lg font-bold'
-                                            : 'text-blue-100/80 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                >
-                                    {/* Indicador activo */}
-                                    {location.pathname === option.to && (
-                                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-400 rounded-r-full"></span>
-                                    )}
-                                    <span className={`p-1.5 rounded-lg transition-all ${
-                                        location.pathname === option.to
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : 'bg-white/10 text-blue-200 group-hover:bg-white/20'
-                                    }`}>
-                                        {option.icon}
-                                    </span>
-                                    <span className="text-sm font-semibold">{option.label}</span>
-                                </Link>
+                                {hasSubmenu ? (
+                                    <div>
+                                        <button
+                                            onClick={() => setSubmenuAbierto(isSubmenuOpen ? null : menuId)}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
+                                                isSubmenuActive
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'text-blue-100/80 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            <span className={`p-1.5 rounded-lg transition-all ${
+                                                isSubmenuActive
+                                                    ? 'bg-white/20 text-blue-200'
+                                                    : 'bg-white/10 text-blue-200 group-hover:bg-white/20'
+                                            }`}>
+                                                {option.icon}
+                                            </span>
+                                            <span className="text-sm font-semibold flex-1 text-left">{option.label}</span>
+                                            <svg
+                                                className={`w-4 h-4 transition-transform duration-300 ${isSubmenuOpen ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                            </svg>
+                                        </button>
+                                        
+                                        {/* Submenu */}
+                                        {isSubmenuOpen && (
+                                            <ul className="mt-1 ml-2 pl-2 border-l border-white/20 space-y-1">
+                                                {option.subMenus?.map((submenu, subindex) => (
+                                                    <li key={subindex}>
+                                                        <Link
+                                                            to={submenu.to}
+                                                            className={`block px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                                                                location.pathname === submenu.to
+                                                                    ? 'bg-white text-blue-900 font-bold'
+                                                                    : 'text-blue-100/80 hover:bg-white/10 hover:text-white'
+                                                            }`}
+                                                        >
+                                                            {submenu.label}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <Link
+                                        to={option.to!}
+                                        id={`menu-${menuId}`}
+                                        data-testid={`menu-${menuId}`}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
+                                            isActive
+                                                ? 'bg-white text-blue-900 shadow-lg font-bold'
+                                                : 'text-blue-100/80 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                    >
+                                        {/* Indicador activo */}
+                                        {isActive && (
+                                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-400 rounded-r-full"></span>
+                                        )}
+                                        <span className={`p-1.5 rounded-lg transition-all ${
+                                            isActive
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : 'bg-white/10 text-blue-200 group-hover:bg-white/20'
+                                        }`}>
+                                            {option.icon}
+                                        </span>
+                                        <span className="text-sm font-semibold">{option.label}</span>
+                                    </Link>
+                                )}
                             </li>
                         );
                     })}

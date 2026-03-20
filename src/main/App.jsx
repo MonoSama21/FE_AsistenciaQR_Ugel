@@ -12,6 +12,9 @@ import Usuarios from './components/pages/Usuarios'
 import Personal from './components/pages/Personal'
 import Asistencia from './components/pages/Asistencia'
 import ReporteAsistencia from './components/pages/ReporteAsistencia'
+import Cargos from './components/pages/DatosMaestros/Cargos'
+import Distritos from './components/pages/DatosMaestros/Distritos'
+import InstitucionesEducativas from './components/pages/DatosMaestros/InstitucionesEducativas'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('authToken'))
@@ -92,6 +95,33 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReporteAsistencia />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/dashboard/datos-maestros/cargos" 
+            element={
+              <ProtectedRoute>
+                <Cargos />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/dashboard/datos-maestros/distritos" 
+            element={
+              <ProtectedRoute>
+                <Distritos />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/dashboard/datos-maestros/instituciones" 
+            element={
+              <ProtectedRoute>
+                <InstitucionesEducativas />
               </ProtectedRoute>
             } 
           />
