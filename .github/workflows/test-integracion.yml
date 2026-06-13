@@ -31,7 +31,7 @@ on:
 jobs:
   Pruebas-FrontEnd-Integracion:
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write  # 👈 Permiso para hacer push a gh-pages
       pages: write     # 👈 Permiso para desplegar en GitHub Pages
@@ -170,7 +170,7 @@ jobs:
     - name: Install Playwright Browsers
       working-directory: src/test
       run: npx playwright install --with-deps
-      
+
     - name: Run Playwright tests by tag
       id: run_tests
       working-directory: src/test
