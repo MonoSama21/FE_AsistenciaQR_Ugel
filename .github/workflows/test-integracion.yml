@@ -43,7 +43,7 @@ jobs:
 
     - uses: actions/setup-node@v4
       with:
-        node-version: lts/*
+        node-version: 22
 
     # =========================================================
     # 📌 ASIGNAR TAG Y CORREO SEGÚN EL TIPO DE DISPARO
@@ -174,7 +174,22 @@ jobs:
 
     - name: Install Playwright Browsers
       working-directory: src/test
-      run: npx playwright install chromium
+      run: |
+        node -v
+        npm -v
+        npx playwright --version
+
+        echo "Antes de instalar"
+        ls -lah ~/.cache || true
+
+        DEBUG=pw:install npx playwright install chromium
+
+        echo "Después de instalar"
+
+    - name: Verificar Playwright
+      working-directory: src/test
+      run: |
+        npx playwright install --list
 
     - name: Run Playwright tests by tag
       id: run_tests
