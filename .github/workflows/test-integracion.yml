@@ -169,8 +169,8 @@ jobs:
 
     - name: Install Playwright Browsers
       working-directory: src/test
-      run: npx playwright install chromium
-
+      run: npx playwright install --with-deps
+      
     - name: Run Playwright tests by tag
       id: run_tests
       working-directory: src/test
