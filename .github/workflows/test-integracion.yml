@@ -32,6 +32,7 @@ jobs:
   Pruebas-FrontEnd-Integracion:
     timeout-minutes: 60
     runs-on: ubuntu-22.04
+    
     permissions:
       contents: write  # 👈 Permiso para hacer push a gh-pages
       pages: write     # 👈 Permiso para desplegar en GitHub Pages
@@ -167,9 +168,13 @@ jobs:
       working-directory: src/test
       run: npm ci
 
+    # 👇 Limpia cualquier cache corrupta de Playwright
+    - name: Limpiar cache Playwright
+      run: rm -rf ~/.cache/ms-playwright
+
     - name: Install Playwright Browsers
       working-directory: src/test
-      run: npx playwright install --with-deps
+      run: npx playwright install chromium
 
     - name: Run Playwright tests by tag
       id: run_tests
