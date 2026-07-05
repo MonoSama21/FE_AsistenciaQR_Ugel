@@ -1,11 +1,11 @@
 [
   {
-    "id": "28700540594",
-    "runNumber": 152,
+    "id": "28735189686",
+    "runNumber": 153,
     "tag": "@WeekendTest",
     "ambiente": "certificacion",
-    "date": "2026-07-04T08:29:07Z",
-    "dateFormatted": "04/07/2026 08:29",
+    "date": "2026-07-05T08:45:26Z",
+    "dateFormatted": "05/07/2026 08:45",
     "total": 0,
     "passed": 0,
     "failed": 0,
@@ -16,8 +16,8 @@
     "commit": "3309178745893dff8c45870d594eba18df648160",
     "commitShort": "3309178",
     "actor": "MonoSama21",
-    "reportUrl": "https://MonoSama21.github.io/FE_AsistenciaQR_Ugel/reports/28700540594",
-    "actionsUrl": "https://github.com/MonoSama21/FE_AsistenciaQR_Ugel/actions/runs/28700540594"
+    "reportUrl": "https://MonoSama21.github.io/FE_AsistenciaQR_Ugel/reports/28735189686",
+    "actionsUrl": "https://github.com/MonoSama21/FE_AsistenciaQR_Ugel/actions/runs/28735189686"
   },
   {
     "id": "28668708866",
